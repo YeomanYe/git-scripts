@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 实现 git add . && git commit -m "xxx" 的功能
+# Implements git add . && git commit -m "xxx" functionality
 
 if [ $# -eq 0 ]; then
-    echo "错误：请提供提交信息，例如：gac \"feat: xxx\""
+    echo "Error: Please provide a commit message, for example: gac \"feat: xxx\""
     exit 1
 fi
 
