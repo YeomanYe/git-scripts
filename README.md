@@ -31,6 +31,35 @@ gac "fix: 修复表单验证bug"
 gac "docs: 更新README文档"
 ```
 
+### gpf - Git Push Force
+
+**功能**：执行 `git add . && git commit -m "xxx" && git push -f` 命令，一键添加所有修改、提交并强制推送到远程仓库。
+
+**使用方法**：
+```bash
+gpf "feat: 添加新功能"
+```
+
+**参数**：
+- 必须提供提交信息，例如：`"feat: xxx"`、`"fix: xxx"` 等
+
+**示例**：
+```bash
+gpf "feat: 实现用户登录功能"
+gpf "fix: 修复表单验证bug"
+gpf "docs: 更新README文档"
+```
+
+### grh - Git Rebase to First Commit
+
+**功能**：将当前分支rebase到其第一次提交。
+
+**使用方法**：
+```bash
+grh
+```
+
+
 ## 注册脚本到全局环境
 
 ### 使用方法
@@ -56,20 +85,19 @@ gac "docs: 更新README文档"
 
 ```
 已注册命令：gac -> /path/to/git-scripts/scripts/gac.sh
+已注册命令：gpf -> /path/to/git-scripts/scripts/gpf.sh
+已注册命令：grh -> /path/to/git-scripts/scripts/grh.sh
 
 注册完成！所有脚本已链接到 /usr/local/bin
 可以直接使用以下命令：
   - gac
+  - gpf
+  - grh
 ```
 
 ## 自定义脚本
 
 你可以在 `scripts/` 目录下添加自己的Git快捷脚本，然后运行 `register.sh` 注册到全局环境。
-
-### 脚本命名规则
-
-- 脚本文件名应使用小写字母，单词之间用连字符分隔（例如：`git-push-all.sh`）
-- 注册后，命令名将移除 `.sh` 扩展名（例如：`git-push-all`）
 
 ## 注意事项
 
@@ -85,10 +113,26 @@ gac "docs: 更新README文档"
 
 ## 卸载脚本
 
-手动删除 `/usr/local/bin` 目录下的符号链接即可：
+### 使用 unregister.sh 脚本
+
+你可以使用项目提供的 `unregister.sh` 脚本一键卸载所有注册的脚本：
+
+1. 确保 `unregister.sh` 有执行权限：
+   ```bash
+   chmod +x unregister.sh
+   ```
+
+2. 运行卸载脚本（需要root权限）：
+   ```bash
+   sudo ./unregister.sh
+   ```
+
+### 手动卸载
+
+如果你想手动卸载，可以删除 `/usr/local/bin` 目录下的符号链接：
 
 ```bash
-sudo rm /usr/local/bin/gac
+sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh
 ```
 
 ## 许可证
