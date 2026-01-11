@@ -59,6 +59,15 @@ gpf "docs: 更新README文档"
 grh
 ```
 
+### gcr - Git Clean Repository
+
+**功能**：清理Git仓库，等价于执行 `git stash -u && git stash drop stash@{0}` 命令，用于删除所有未提交的修改（包括未跟踪文件）。
+
+**使用方法**：
+```bash
+gcr
+```
+
 
 ## 注册脚本到全局环境
 
