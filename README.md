@@ -68,6 +68,24 @@ grh
 gcr
 ```
 
+### gph - Git Push
+
+**功能**：执行 `git add . && git commit -m "xxx" && git push` 命令，一键添加所有修改、提交并推送到远程仓库。
+
+**使用方法**：
+```bash
+gph "feat: 添加新功能"
+```
+
+**参数**：
+- 必须提供提交信息，例如：`"feat: xxx"`、`"fix: xxx"` 等
+
+**示例**：
+```bash
+gph "feat: 实现用户登录功能"
+gph "fix: 修复表单验证bug"
+gph "docs: 更新README文档"
+```
 
 ## 注册脚本到全局环境
 
@@ -96,12 +114,16 @@ gcr
 已注册命令：gac -> /path/to/git-scripts/scripts/gac.sh
 已注册命令：gpf -> /path/to/git-scripts/scripts/gpf.sh
 已注册命令：grh -> /path/to/git-scripts/scripts/grh.sh
+已注册命令：gcr -> /path/to/git-scripts/scripts/gcr.sh
+已注册命令：gph -> /path/to/git-scripts/scripts/gph.sh
 
 注册完成！所有脚本已链接到 /usr/local/bin
 可以直接使用以下命令：
   - gac
   - gpf
   - grh
+  - gcr
+  - gph
 ```
 
 ## 自定义脚本
@@ -141,7 +163,7 @@ gcr
 如果你想手动卸载，可以删除 `/usr/local/bin` 目录下的符号链接：
 
 ```bash
-sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh
+sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph
 ```
 
 ## 许可证
