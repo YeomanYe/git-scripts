@@ -119,6 +119,64 @@ You can view them with 'git stash list'
 To apply them back, use 'git stash pop' or 'git stash apply'
 ```
 
+### gsc - Git Stash Commit
+
+**功能**：从 stash 中恢复更改并提交，将 stash 记录的描述设置为 commit 的 message。
+
+**使用方法**：
+```bash
+# 恢复最新的 stash 并提交
+gsc
+
+# 按顺序恢复所有 stash 并提交
+gsc -s
+```
+
+**参数**：
+- `-s`：按顺序 pop 代码并 commit（从最早到最新）
+
+**工作原理**：
+1. 检查是否有 stash 项可用
+2. 对于单个 stash 项：
+   - 执行 `git stash pop`
+   - 使用 stash 描述作为 commit message 执行 `git commit`
+3. 对于多个 stash 项（使用 `-s`）：
+   - 按顺序（从最早到最新）执行上述操作
+
+**示例**：
+```bash
+# 恢复最新 stash 并提交
+gsc
+
+# 按顺序恢复所有 stash 并提交
+gsc -s
+```
+
+**输出示例**：
+```
+# 单个 stash 恢复
+Popping only the latest stash item...
+Committing with message: feat: add gcs
+Successfully committed the latest stash item
+
+Stash commit operation completed successfully!
+You can view the commits with 'git log'
+
+# 多个 stash 恢复
+Popping stash items in order and committing each...
+
+Popping stash item: stash@{0}
+Committing with message: feat: add gph
+Successfully committed stash item stash@{0}
+
+Popping stash item: stash@{1}
+Committing with message: feat: add gcs
+Successfully committed stash item stash@{1}
+
+Stash commit operation completed successfully!
+You can view the commits with 'git log'
+```
+
 ## 注册脚本到全局环境
 
 ### 使用方法
@@ -149,6 +207,7 @@ To apply them back, use 'git stash pop' or 'git stash apply'
 已注册命令：gcr -> /path/to/git-scripts/scripts/gcr.sh
 已注册命令：gph -> /path/to/git-scripts/scripts/gph.sh
 已注册命令：gcs -> /path/to/git-scripts/scripts/gcs.sh
+已注册命令：gsc -> /path/to/git-scripts/scripts/gsc.sh
 
 注册完成！所有脚本已链接到 /usr/local/bin
 可以直接使用以下命令：
@@ -158,6 +217,7 @@ To apply them back, use 'git stash pop' or 'git stash apply'
   - gcr
   - gph
   - gcs
+  - gsc
 ```
 
 ## 自定义脚本
@@ -197,7 +257,7 @@ To apply them back, use 'git stash pop' or 'git stash apply'
 如果你想手动卸载，可以删除 `/usr/local/bin` 目录下的符号链接：
 
 ```bash
-sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph /usr/local/bin/gcs
+sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph /usr/local/bin/gcs /usr/local/bin/gsc
 ```
 
 ## 许可证
