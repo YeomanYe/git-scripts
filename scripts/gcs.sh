@@ -71,6 +71,7 @@ else
     echo "Stashed commit: $commit_message"
 fi
 
-echo "\nStash operation completed successfully!"
+echo
+echo "Stash operation completed successfully!"
 echo "You can view them with 'git stash list'"
 echo "To apply them back, use 'git stash pop' or 'git stash apply'"
