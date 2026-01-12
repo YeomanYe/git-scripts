@@ -46,7 +46,8 @@ if [ "$sequential_commit" = true ]; then
         stash_description=$(git stash list | head -n 1 | cut -d: -f2- | sed 's/^[[:space:]]*//' | sed 's/^On [^:]*: //')
         
         # Pop stash@{0}
-        echo "\nPopping stash item: stash@{0}"
+        echo
+        echo "Popping stash item: stash@{0}"
         git stash pop
         
         if [ $? -ne 0 ]; then
@@ -98,5 +99,6 @@ else
     echo "Successfully committed the latest stash item"
 fi
 
-echo "\nStash commit operation completed successfully!"
+echo
+echo "Stash commit operation completed successfully!"
 echo "You can view the commits with 'git log'"
