@@ -53,6 +53,9 @@ if [ "$sequential_commit" = true ]; then
             exit 1
         fi
         
+        # Stage changes
+        git add .
+        
         # Commit with stash description as message
         echo "Committing with message: $stash_description"
         git commit -m "$stash_description"
@@ -78,6 +81,9 @@ else
         echo "Error: Failed to pop stash"
         exit 1
     fi
+    
+    # Stage changes
+    git add .
     
     # Commit with stash description as message
     echo "Committing with message: $latest_stash_description"
