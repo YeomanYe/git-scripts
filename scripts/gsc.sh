@@ -41,8 +41,8 @@ if [ "$sequential_commit" = true ]; then
     stash_list=$(git stash list | sort -n | cut -d: -f1)
     
     for stash_item in $stash_list; do
-        # 获取 stash 描述
-        stash_description=$(git stash list | grep "^$stash_item:" | cut -d: -f2- | sed 's/^[[:space:]]*//')
+        # 获取 stash 描述，移除 'On branch' 前缀
+        stash_description=$(git stash list | grep "^$stash_item:" | cut -d: -f2- | sed 's/^[[:space:]]*//' | sed 's/^On [^:]*: //')
         
         # Pop stash
         echo "\nPopping stash item: $stash_item"
@@ -71,8 +71,8 @@ else
     # 不使用 -s 参数时，只 pop 最新的 stash 项
     echo "Popping only the latest stash item..."
     
-    # 获取最新 stash 项的描述
-    latest_stash_description=$(git stash list | head -n 1 | cut -d: -f2- | sed 's/^[[:space:]]*//')
+    # 获取最新 stash 项的描述，移除 'On branch' 前缀
+    latest_stash_description=$(git stash list | head -n 1 | cut -d: -f2- | sed 's/^[[:space:]]*//' | sed 's/^On [^:]*: //')
     
     # Pop latest stash
     git stash pop
