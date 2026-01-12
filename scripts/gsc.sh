@@ -37,19 +37,20 @@ if [ "$sequential_commit" = true ]; then
     # 使用 -s 参数时，按顺序 pop 代码并 commit
     echo "Popping stash items in order and committing each..."
     
-    # 获取 stash 列表，按顺序（从最早到最新）
-    stash_list=$(git stash list | sort -n | cut -d: -f1)
+    # 获取 stash 数量
+    stash_count=$(git stash list | wc -l | tr -d ' ')
     
-    for stash_item in $stash_list; do
-        # 获取 stash 描述，移除 'On branch' 前缀
-        stash_description=$(git stash list | grep "^$stash_item:" | cut -d: -f2- | sed 's/^[[:space:]]*//' | sed 's/^On [^:]*: //')
+    for ((i=0; i<$stash_count; i++)); do
+        # 始终处理 stash@{0}，因为每次 pop 后堆栈会变化
+        # 获取当前 stash@{0} 的描述，移除 'On branch' 前缀
+        stash_description=$(git stash list | head -n 1 | cut -d: -f2- | sed 's/^[[:space:]]*//' | sed 's/^On [^:]*: //')
         
-        # Pop stash
-        echo "\nPopping stash item: $stash_item"
-        git stash pop "$stash_item"
+        # Pop stash@{0}
+        echo "\nPopping stash item: stash@{0}"
+        git stash pop
         
         if [ $? -ne 0 ]; then
-            echo "Error: Failed to pop stash item $stash_item"
+            echo "Error: Failed to pop stash item"
             exit 1
         fi
         
@@ -65,7 +66,7 @@ if [ "$sequential_commit" = true ]; then
             exit 1
         fi
         
-        echo "Successfully committed stash item $stash_item"
+        echo "Successfully committed stash item"
     done
 else
     # 不使用 -s 参数时，只 pop 最新的 stash 项
