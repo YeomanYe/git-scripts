@@ -87,6 +87,38 @@ gph "fix: 修复表单验证bug"
 gph "docs: 更新README文档"
 ```
 
+### gcs - Git Commit Stash
+
+**功能**：将当前分支相比远端多出来的 commit 依次存储到 stash 中，并将提交的 message 作为 stash 的注释。
+
+**使用方法**：
+```bash
+gcs
+```
+
+**工作原理**：
+1. 获取当前分支名称
+2. 检查对应的远端分支是否存在
+3. 获取本地比远端多的 commit 列表
+4. 按时间从早到晚的顺序，依次执行以下操作：
+   - `git reset HEAD~1`
+   - `git stash push -m "commit_message"`
+
+**示例**：
+```bash
+gcs
+```
+
+**输出示例**：
+```
+Stashed commit: feat: add gcs
+Stashed commit: feat: add gph
+
+All local commits have been stashed successfully!
+You can view them with 'git stash list'
+To apply them back, use 'git stash pop' or 'git stash apply'
+```
+
 ## 注册脚本到全局环境
 
 ### 使用方法
@@ -116,6 +148,7 @@ gph "docs: 更新README文档"
 已注册命令：grh -> /path/to/git-scripts/scripts/grh.sh
 已注册命令：gcr -> /path/to/git-scripts/scripts/gcr.sh
 已注册命令：gph -> /path/to/git-scripts/scripts/gph.sh
+已注册命令：gcs -> /path/to/git-scripts/scripts/gcs.sh
 
 注册完成！所有脚本已链接到 /usr/local/bin
 可以直接使用以下命令：
@@ -124,6 +157,7 @@ gph "docs: 更新README文档"
   - grh
   - gcr
   - gph
+  - gcs
 ```
 
 ## 自定义脚本
@@ -163,7 +197,7 @@ gph "docs: 更新README文档"
 如果你想手动卸载，可以删除 `/usr/local/bin` 目录下的符号链接：
 
 ```bash
-sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph
+sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph /usr/local/bin/gcs
 ```
 
 ## 许可证
