@@ -139,6 +139,7 @@ gsc -s
 1. 检查是否有 stash 项可用
 2. 对于单个 stash 项：
    - 执行 `git stash pop`
+   - 执行 `git add .` 暂存所有更改
    - 使用 stash 描述作为 commit message 执行 `git commit`
 3. 对于多个 stash 项（使用 `-s`）：
    - 按顺序（从最早到最新）执行上述操作
