@@ -6,15 +6,15 @@
 sequential_commit=false
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -s)
+        -a)
             sequential_commit=true
             shift
             ;;
         *)
             echo "Error: Unknown option $1"
-            echo "Usage: gsc [-s]"
-            echo "  -s    Pop stash items in order and commit each"
-            echo "  (without -s) Pop only the latest stash item and commit"
+            echo "Usage: gsc [-a]"
+            echo "  -a    Pop stash items in order and commit each"
+            echo "  (without -a) Pop only the latest stash item and commit"
             exit 1
             ;;
     esac
@@ -34,7 +34,7 @@ if [ "$stash_count" -eq 0 ]; then
 fi
 
 if [ "$sequential_commit" = true ]; then
-    # 使用 -s 参数时，按顺序 pop 代码并 commit
+    # 使用 -a 参数时，按顺序 pop 代码并 commit
     echo "Popping stash items in order and committing each..."
     
     # 获取 stash 数量
@@ -70,7 +70,7 @@ if [ "$sequential_commit" = true ]; then
         echo "Successfully committed stash item"
     done
 else
-    # 不使用 -s 参数时，只 pop 最新的 stash 项
+    # 不使用 -a 参数时，只 pop 最新的 stash 项
     echo "Popping only the latest stash item..."
     
     # 获取最新 stash 项的描述，移除 'On branch' 前缀

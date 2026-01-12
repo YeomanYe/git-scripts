@@ -129,11 +129,11 @@ To apply them back, use 'git stash pop' or 'git stash apply'
 gsc
 
 # 按顺序恢复所有 stash 并提交
-gsc -s
+gsc -a
 ```
 
 **参数**：
-- `-s`：按顺序 pop 代码并 commit（从最早到最新）
+- `-a`：按顺序 pop 代码并 commit（从最早到最新）
 
 **工作原理**：
 1. 检查是否有 stash 项可用
@@ -141,7 +141,7 @@ gsc -s
    - 执行 `git stash pop`
    - 执行 `git add .` 暂存所有更改
    - 使用 stash 描述作为 commit message 执行 `git commit`
-3. 对于多个 stash 项（使用 `-s`）：
+3. 对于多个 stash 项（使用 `-a`）：
    - 按顺序（从最早到最新）执行上述操作
 
 **示例**：
@@ -150,7 +150,7 @@ gsc -s
 gsc
 
 # 按顺序恢复所有 stash 并提交
-gsc -s
+gsc -a
 ```
 
 **输出示例**：
