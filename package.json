@@ -1,0 +1,25 @@
+{
+  "name": "git-scripts",
+  "version": "1.0.0",
+  "description": "A collection of git utility scripts compatible with Windows",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "gac": "./index.js",
+    "gcr": "./index.js",
+    "gcs": "./index.js",
+    "gpf": "./index.js",
+    "gph": "./index.js",
+    "grh": "./index.js",
+    "gsc": "./index.js"
+  },
+  "keywords": ["git", "scripts", "windows-compatible"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.2"
+  }
+}
