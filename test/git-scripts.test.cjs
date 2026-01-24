@@ -10,8 +10,9 @@ function executeGitCommand(cwd, command) {
 
 // Helper function to execute our scripts
 function executeScript(cwd, command) {
-  const scriptPath = path.join(__dirname, '../index.js');
-  return execSync(`node ${scriptPath} ${command}`, { cwd, encoding: 'utf8', stdio: 'pipe' });
+  const [cmd, ...args] = command.split(' ');
+  const scriptPath = path.join(__dirname, `../src/${cmd}.js`);
+  return execSync(`node ${scriptPath} ${args.join(' ')}`, { cwd, encoding: 'utf8', stdio: 'pipe' });
 }
 
 describe('git-scripts', () => {
