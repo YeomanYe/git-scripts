@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
+const { Command } = require('commander');
 
 // Helper function to execute git commands
 function executeGitCommand(command) {
@@ -14,28 +15,20 @@ function executeGitCommand(command) {
   }
 }
 
-// Get arguments
-const [, , ...args] = process.argv;
+// Create commander instance
+const program = new Command();
 
-// Check for help argument
-if (args.includes('-h') || args.includes('--help')) {
-  console.log('Usage: gcr');
-  console.log('');
-  console.log('Description:');
-  console.log('  Clean git repository by removing all untracked files and directories.');
-  console.log('  Equivalent to: git clean -fdx');
-  console.log('');
-  console.log('Examples:');
-  console.log('  gcr');
-  process.exit(0);
-}
+// Configure program
+program
+  .name('gcr')
+  .description('Clean git repository by removing all untracked files and directories')
+  .version('1.0.0')
+  .usage('')
+  .addHelpText('after', `\nExamples:\n  $ gcr`)
+  .action(() => {
+    executeGitCommand('git clean -fdx');
+    console.log('Git repository cleaned!');
+  });
 
-// Clean git repository
-try {
-  // Directly try to clean untracked files
-  executeGitCommand('git clean -fdx');
-  console.log('Git repository cleaned!');
-} catch (error) {
-  console.error(`Error cleaning repository: ${error.message}`);
-  process.exit(1);
-}
+// Parse arguments
+program.parse(process.argv);

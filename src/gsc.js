@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
+const { Command } = require('commander');
 
 // Helper function to execute git commands
 function executeGitCommand(command) {
@@ -14,82 +15,75 @@ function executeGitCommand(command) {
   }
 }
 
-// Get arguments
-const [, , ...args] = process.argv;
+// Create commander instance
+const program = new Command();
 
-// Check for help argument
-if (args.includes('-h') || args.includes('--help')) {
-  console.log('Usage: gsc [options]');
-  console.log('');
-  console.log('Description:');
-  console.log('  Pop stash items and commit them with their original descriptions.');
-  console.log('  Useful for restoring stashed changes as commits.');
-  console.log('');
-  console.log('Options:');
-  console.log('  -a, --all    Pop and commit all stash items');
-  console.log('  -h, --help   Show this help message');
-  console.log('');
-  console.log('Examples:');
-  console.log('  gsc              Pop and commit the latest stash item');
-  console.log('  gsc -a           Pop and commit all stash items');
-  process.exit(0);
-}
+// Configure program
+program
+  .name('gsc')
+  .description('Pop stash items and commit them with their original descriptions')
+  .version('1.0.0')
+  .usage('[options]')
+  .option('-a, --all', 'Pop and commit all stash items')
+  .addHelpText('after', `\nExamples:\n  $ gsc              Pop and commit the latest stash item\n  $ gsc -a           Pop and commit all stash items`)
+  .action((options) => {
+    // Check if there are stash items
+    let stashCount;
+    let stashList;
+    try {
+      stashList = executeGitCommand('git stash list');
+      stashCount = stashList.split('\n').filter(line => line.trim()).length;
+    } catch (error) {
+      console.log('Info: No stash items available');
+      process.exit(0);
+    }
 
-const all = args.includes('-a') || args.includes('--all');
+    if (stashCount === 0) {
+      console.log('Info: No stash items available');
+      process.exit(0);
+    }
 
-// Check if there are stash items
-let stashCount;
-let stashList;
-try {
-  stashList = executeGitCommand('git stash list');
-  stashCount = stashList.split('\n').filter(line => line.trim()).length;
-} catch (error) {
-  console.log('Info: No stash items available');
-  process.exit(0);
-}
+    if (options.all) {
+      console.log('Popping stash items in order and committing each...');
+      
+      for (let i = 0; i < stashCount; i++) {
+        // Get stash description
+        const currentStashList = executeGitCommand('git stash list');
+        const firstStashInfo = currentStashList.split('\n').filter(line => line.trim())[0];
+        if (!firstStashInfo) break;
+        
+        const stashDescription = firstStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
+        
+        console.log();
+        console.log(`Popping stash item: stash@{0}`);
+        executeGitCommand('git stash pop');
+        
+        executeGitCommand('git add .');
+        console.log(`Committing with message: ${stashDescription}`);
+        executeGitCommand(`git commit -m "${stashDescription}"`);
+        
+        console.log('Successfully committed stash item');
+      }
+    } else {
+      console.log('Popping only the latest stash item...');
+      
+      // Get latest stash description
+      const latestStashInfo = stashList.split('\n').filter(line => line.trim())[0];
+      const latestStashDescription = latestStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
+      
+      executeGitCommand('git stash pop');
+      
+      executeGitCommand('git add .');
+      console.log(`Committing with message: ${latestStashDescription}`);
+      executeGitCommand(`git commit -m "${latestStashDescription}"`);
+      
+      console.log('Successfully committed the latest stash item');
+    }
 
-if (stashCount === 0) {
-  console.log('Info: No stash items available');
-  process.exit(0);
-}
-
-if (all) {
-  console.log('Popping stash items in order and committing each...');
-  
-  for (let i = 0; i < stashCount; i++) {
-    // Get stash description
-    const currentStashList = executeGitCommand('git stash list');
-    const firstStashInfo = currentStashList.split('\n').filter(line => line.trim())[0];
-    if (!firstStashInfo) break;
-    
-    const stashDescription = firstStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
-    
     console.log();
-    console.log(`Popping stash item: stash@{0}`);
-    executeGitCommand('git stash pop');
-    
-    executeGitCommand('git add .');
-    console.log(`Committing with message: ${stashDescription}`);
-    executeGitCommand(`git commit -m "${stashDescription}"`);
-    
-    console.log('Successfully committed stash item');
-  }
-} else {
-  console.log('Popping only the latest stash item...');
-  
-  // Get latest stash description
-  const latestStashInfo = stashList.split('\n').filter(line => line.trim())[0];
-  const latestStashDescription = latestStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
-  
-  executeGitCommand('git stash pop');
-  
-  executeGitCommand('git add .');
-  console.log(`Committing with message: ${latestStashDescription}`);
-  executeGitCommand(`git commit -m "${latestStashDescription}"`);
-  
-  console.log('Successfully committed the latest stash item');
-}
+    console.log('Stash commit operation completed successfully!');
+    console.log('You can view the commits with \'git log\'');
+  });
 
-console.log();
-console.log('Stash commit operation completed successfully!');
-console.log('You can view the commits with \'git log\'');
+// Parse arguments
+program.parse(process.argv);

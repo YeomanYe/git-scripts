@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
+const { Command } = require('commander');
 
 // Helper function to execute git commands
 function executeGitCommand(command) {
@@ -14,30 +15,22 @@ function executeGitCommand(command) {
   }
 }
 
-// Get commit message from arguments
-const [, , ...args] = process.argv;
+// Create commander instance
+const program = new Command();
 
-// Check for help argument
-if (args.includes('-h') || args.includes('--help')) {
-  console.log('Usage: gpf [commit-message]');
-  console.log('');
-  console.log('Description:');
-  console.log('  Quickly add all changes, commit with the provided message, and force push.');
-  console.log('  Equivalent to: git add . && git commit -m "[commit-message]" && git push -f');
-  console.log('');
-  console.log('Examples:');
-  console.log('  gpf "feat: add new feature"');
-  console.log('  gpf "fix: resolve bug"');
-  process.exit(0);
-}
+// Configure program
+program
+  .name('gpf')
+  .description('Quickly add all changes, commit with the provided message, and force push')
+  .version('1.0.0')
+  .usage('[commit-message]')
+  .argument('<commit-message>', 'Commit message for the git commit')
+  .addHelpText('after', `\nExamples:\n  $ gpf "feat: add new feature"\n  $ gpf "fix: resolve bug"`)
+  .action((message) => {
+    executeGitCommand('git add .');
+    executeGitCommand(`git commit -m "${message}"`);
+    executeGitCommand('git push -f');
+  });
 
-if (args.length === 0) {
-  console.error('Error: Please provide a commit message, for example: gpf "feat: xxx"');
-  console.error('Use gpf -h or gpf --help for more information.');
-  process.exit(1);
-}
-
-const message = args.join(' ');
-executeGitCommand('git add .');
-executeGitCommand(`git commit -m "${message}"`);
-executeGitCommand('git push -f');
+// Parse arguments
+program.parse(process.argv);

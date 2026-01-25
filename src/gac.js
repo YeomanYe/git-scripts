@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
+const { Command } = require('commander');
 
 // Helper function to execute git commands
 function executeGitCommand(command) {
@@ -14,29 +15,21 @@ function executeGitCommand(command) {
   }
 }
 
-// Get commit message from arguments
-const [, , ...args] = process.argv;
+// Create commander instance
+const program = new Command();
 
-// Check for help argument
-if (args.includes('-h') || args.includes('--help')) {
-  console.log('Usage: gac [commit-message]');
-  console.log('');
-  console.log('Description:');
-  console.log('  Quickly add all changes and commit with the provided message.');
-  console.log('  Equivalent to: git add . && git commit -m "[commit-message]"');
-  console.log('');
-  console.log('Examples:');
-  console.log('  gac "feat: add new feature"');
-  console.log('  gac "fix: resolve bug"');
-  process.exit(0);
-}
+// Configure program
+program
+  .name('gac')
+  .description('Quickly add all changes and commit with the provided message')
+  .version('1.0.0')
+  .usage('[commit-message]')
+  .argument('<commit-message>', 'Commit message for the git commit')
+  .addHelpText('after', `\nExamples:\n  $ gac "feat: add new feature"\n  $ gac "fix: resolve bug"`)
+  .action((message) => {
+    executeGitCommand('git add .');
+    executeGitCommand(`git commit -m "${message}"`);
+  });
 
-if (args.length === 0) {
-  console.error('Error: Please provide a commit message, for example: gac "feat: xxx"');
-  console.error('Use gac -h or gac --help for more information.');
-  process.exit(1);
-}
-
-const message = args.join(' ');
-executeGitCommand('git add .');
-executeGitCommand(`git commit -m "${message}"`);
+// Parse arguments
+program.parse(process.argv);
