@@ -16,6 +16,25 @@ function executeGitCommand(command) {
 
 // Get arguments
 const [, , ...args] = process.argv;
+
+// Check for help argument
+if (args.includes('-h') || args.includes('--help')) {
+  console.log('Usage: gsc [options]');
+  console.log('');
+  console.log('Description:');
+  console.log('  Pop stash items and commit them with their original descriptions.');
+  console.log('  Useful for restoring stashed changes as commits.');
+  console.log('');
+  console.log('Options:');
+  console.log('  -a, --all    Pop and commit all stash items');
+  console.log('  -h, --help   Show this help message');
+  console.log('');
+  console.log('Examples:');
+  console.log('  gsc              Pop and commit the latest stash item');
+  console.log('  gsc -a           Pop and commit all stash items');
+  process.exit(0);
+}
+
 const all = args.includes('-a') || args.includes('--all');
 
 // Check if there are stash items

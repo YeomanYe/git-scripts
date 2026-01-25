@@ -17,8 +17,23 @@ function executeGitCommand(command) {
 // Get commit message from arguments
 const [, , ...args] = process.argv;
 
+// Check for help argument
+if (args.includes('-h') || args.includes('--help')) {
+  console.log('Usage: gac [commit-message]');
+  console.log('');
+  console.log('Description:');
+  console.log('  Quickly add all changes and commit with the provided message.');
+  console.log('  Equivalent to: git add . && git commit -m "[commit-message]"');
+  console.log('');
+  console.log('Examples:');
+  console.log('  gac "feat: add new feature"');
+  console.log('  gac "fix: resolve bug"');
+  process.exit(0);
+}
+
 if (args.length === 0) {
   console.error('Error: Please provide a commit message, for example: gac "feat: xxx"');
+  console.error('Use gac -h or gac --help for more information.');
   process.exit(1);
 }
 

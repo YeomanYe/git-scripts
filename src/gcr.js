@@ -14,6 +14,22 @@ function executeGitCommand(command) {
   }
 }
 
+// Get arguments
+const [, , ...args] = process.argv;
+
+// Check for help argument
+if (args.includes('-h') || args.includes('--help')) {
+  console.log('Usage: gcr');
+  console.log('');
+  console.log('Description:');
+  console.log('  Clean git repository by removing all untracked files and directories.');
+  console.log('  Equivalent to: git clean -fdx');
+  console.log('');
+  console.log('Examples:');
+  console.log('  gcr');
+  process.exit(0);
+}
+
 // Clean git repository
 try {
   // Directly try to clean untracked files

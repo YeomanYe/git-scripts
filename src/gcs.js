@@ -16,6 +16,24 @@ function executeGitCommand(command) {
 
 // Get arguments
 const [, , ...args] = process.argv;
+
+// Check for help argument
+if (args.includes('-h') || args.includes('--help')) {
+  console.log('Usage: gcs [options]');
+  console.log('');
+  console.log('Description:');
+  console.log('  Stash local commits step by step, useful for reordering or modifying commits.');
+  console.log('');
+  console.log('Options:');
+  console.log('  -a, --all    Stash all commits except the first one');
+  console.log('  -h, --help   Show this help message');
+  console.log('');
+  console.log('Examples:');
+  console.log('  gcs              Stash only the latest commit');
+  console.log('  gcs -a           Stash all commits except the first one');
+  process.exit(0);
+}
+
 const all = args.includes('-a') || args.includes('--all');
 
 let currentBranch;

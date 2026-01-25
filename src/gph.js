@@ -17,8 +17,23 @@ function executeGitCommand(command) {
 // Get commit message from arguments
 const [, , ...args] = process.argv;
 
+// Check for help argument
+if (args.includes('-h') || args.includes('--help')) {
+  console.log('Usage: gph [commit-message]');
+  console.log('');
+  console.log('Description:');
+  console.log('  Quickly add all changes, commit with the provided message, and push.');
+  console.log('  Equivalent to: git add . && git commit -m "[commit-message]" && git push');
+  console.log('');
+  console.log('Examples:');
+  console.log('  gph "feat: add new feature"');
+  console.log('  gph "fix: resolve bug"');
+  process.exit(0);
+}
+
 if (args.length === 0) {
   console.error('Error: Please provide a commit message, for example: gph "feat: xxx"');
+  console.error('Use gph -h or gph --help for more information.');
   process.exit(1);
 }
 
