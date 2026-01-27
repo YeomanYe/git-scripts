@@ -4,9 +4,9 @@ const { execSync } = require('child_process');
 const { Command } = require('commander');
 
 // Helper function to execute git commands
-function executeGitCommand(command) {
+function executeGitCommand(command, options = {}) {
   try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
+    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8', ...options });
     return output;
   } catch (error) {
     console.error(`Error executing command: ${command}`);
@@ -24,8 +24,8 @@ program
   .description('Stash local commits step by step, useful for reordering or modifying commits')
   .version('1.0.0')
   .usage('[options]')
-  .option('-a, --all', 'Stash all commits except the first one')
-  .addHelpText('after', `\nExamples:\n  $ gcs              Stash only the latest commit\n  $ gcs -a           Stash all commits except the first one`)
+  .option('-a, --all', 'Stash all commits ahead of remote')
+  .addHelpText('after', `\nExamples:\n  $ gcs              Stash only the latest commit\n  $ gcs -a           Stash all commits ahead of remote`)
   .action((options) => {
     let currentBranch;
     try {
@@ -37,19 +37,27 @@ program
 
     const remoteBranch = `origin/${currentBranch}`;
 
-    // Get commits ahead of remote (just get all commits for testing)
-    const commits = executeGitCommand(`git log --pretty=format:"%H %s"`).trim();
+    // Check if remote branch exists
+    try {
+      executeGitCommand(`git show-ref --verify --quiet "refs/remotes/${remoteBranch}"`);
+    } catch (error) {
+      console.error(`Error: Remote branch ${remoteBranch} does not exist`);
+      process.exit(1);
+    }
+
+    // Get commits ahead of remote, ordered from oldest to newest
+    const commits = executeGitCommand(`git log --pretty=format:"%H %s" ${remoteBranch}..${currentBranch} | awk '{a[i++]=$0} END {for (j=i-1; j>=0; j--) print a[j]}'`).trim();
 
     if (!commits) {
       console.log(`Info: No local commits ahead of ${remoteBranch}`);
       process.exit(0);
     }
 
-    const commitList = commits.split('\n').reverse();
+    const commitList = commits.split('\n');
 
     if (options.all) {
       console.log('Stashing all commits step by step...');
-      for (const commit of commitList.slice(1)) { // Skip first commit
+      for (const commit of commitList) {
         const [commitHash, ...commitMessageParts] = commit.split(' ');
         const commitMessage = commitMessageParts.join(' ');
         
@@ -59,20 +67,16 @@ program
         console.log(`Stashed commit: ${commitMessage}`);
       }
     } else {
-      if (commitList.length > 1) {
-        console.log('Stashing only the latest commit...');
-        const latestCommit = commitList[commitList.length - 1];
-        const [commitHash, ...commitMessageParts] = latestCommit.split(' ');
-        const commitMessage = commitMessageParts.join(' ');
-        
-        executeGitCommand('git reset HEAD~1');
-        executeGitCommand(`git stash push -m "${commitMessage}" -u`);
-        
-        console.log(`Stashed commit: ${commitMessage}`);
-      } else {
-        console.log('Info: Only one commit exists, nothing to stash');
-        process.exit(0);
-      }
+      // Only stash the latest commit
+      console.log('Stashing only the latest commit...');
+      const latestCommit = commitList[commitList.length - 1];
+      const [commitHash, ...commitMessageParts] = latestCommit.split(' ');
+      const commitMessage = commitMessageParts.join(' ');
+      
+      executeGitCommand('git reset HEAD~1');
+      executeGitCommand(`git stash push -m "${commitMessage}" -u`);
+      
+      console.log(`Stashed commit: ${commitMessage}`);
     }
 
     console.log();
