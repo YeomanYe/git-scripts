@@ -34,7 +34,13 @@ describe('gcr', () => {
   });
   
   it('should clean the repository', () => {
-    // Create a test file
+    // Create initial commit
+    const initialFile = path.join(tmpDir.path, 'initial.txt');
+    fs.writeFileSync(initialFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+    
+    // Create a test file that will be stashed
     const testFile = path.join(tmpDir.path, 'test.txt');
     fs.writeFileSync(testFile, 'test content');
     

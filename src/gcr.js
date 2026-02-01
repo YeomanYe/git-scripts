@@ -26,7 +26,8 @@ program
   .usage('')
   .addHelpText('after', `\nExamples:\n  $ gcr`)
   .action(() => {
-    executeGitCommand('git clean -fdx');
+    executeGitCommand('git stash -u');
+    executeGitCommand('git stash drop stash@{0}');
     console.log('Git repository cleaned!');
   });
 
