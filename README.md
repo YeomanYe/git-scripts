@@ -5,8 +5,9 @@
 ## 目录结构
 
 ```
-├── scripts/          # 存放所有Git快捷脚本
-├── register.sh       # 注册脚本到全局环境的工具
+├── src/              # 存放所有Git快捷脚本
+├── package.json      # 项目配置文件
+├── test/             # 测试文件目录
 └── README.md         # 项目说明文档
 ```
 
@@ -61,7 +62,7 @@ grh
 
 ### gcr - Git Clean Repository
 
-**功能**：清理Git仓库，等价于执行 `git stash -u && git stash drop stash@{0}` 命令，用于删除所有未提交的修改（包括未跟踪文件）。
+**功能**：清理Git仓库，通过执行 `git stash -u && git stash drop stash@{0}` 命令，用于删除所有未提交的修改（包括未跟踪文件）。
 
 **使用方法**：
 ```bash
@@ -93,28 +94,52 @@ gph "docs: 更新README文档"
 
 **使用方法**：
 ```bash
+# 只 stash 最新的 commit
 gcs
+
+# stash 所有超前于远端的 commit
+gcs -a
 ```
+
+**参数**：
+- `-a, --all`：Stash all commits ahead of remote
 
 **工作原理**：
 1. 获取当前分支名称
 2. 检查对应的远端分支是否存在
-3. 获取本地比远端多的 commit 列表
-4. 按时间从早到晚的顺序，依次执行以下操作：
-   - `git reset HEAD~1`
-   - `git stash push -m "commit_message"`
+3. 获取本地比远端多的 commit 列表，按时间从早到晚排序
+4. 执行以下操作：
+   - 不使用 `-a` 选项：只 stash 最新的 commit
+   - 使用 `-a` 选项：依次 stash 所有超前于远端的 commit
+   - 对于每个 commit，执行：
+     - `git reset HEAD~1`
+     - `git stash push -m "commit_message" -u`
 
 **示例**：
 ```bash
+# 只 stash 最新的 commit
 gcs
+
+# stash 所有超前于远端的 commit
+gcs -a
 ```
 
 **输出示例**：
 ```
+# 只 stash 最新的 commit
+Stashing only the latest commit...
+Stashed commit: feat: add gcs
+
+Stash operation completed successfully!
+You can view them with 'git stash list'
+To apply them back, use 'git stash pop' or 'git stash apply'
+
+# stash 所有超前于远端的 commit
+Stashing all commits step by step...
 Stashed commit: feat: add gcs
 Stashed commit: feat: add gph
 
-All local commits have been stashed successfully!
+Stash operation completed successfully!
 You can view them with 'git stash list'
 To apply them back, use 'git stash pop' or 'git stash apply'
 ```
@@ -178,88 +203,56 @@ Stash commit operation completed successfully!
 You can view the commits with 'git log'
 ```
 
-## 注册脚本到全局环境
+## 安装和使用
 
-### 使用方法
+### 全局安装
 
-1. 确保 `register.sh` 有执行权限：
-   ```bash
-   chmod +x register.sh
-   ```
+你可以通过pnpm将这些脚本安装为全局命令：
 
-2. 运行注册脚本（需要root权限）：
-   ```bash
-   sudo ./register.sh
-   ```
-
-### 注册脚本功能
-
-- 自动给 `scripts/` 目录下的所有脚本添加执行权限
-- 将脚本链接到 `/usr/local/bin` 目录，移除 `.sh` 扩展名
-- 支持更新已有链接
-- 显示所有注册的命令
-
-### 注册示例输出
-
-```
-已注册命令：gac -> /path/to/git-scripts/scripts/gac.sh
-已注册命令：gpf -> /path/to/git-scripts/scripts/gpf.sh
-已注册命令：grh -> /path/to/git-scripts/scripts/grh.sh
-已注册命令：gcr -> /path/to/git-scripts/scripts/gcr.sh
-已注册命令：gph -> /path/to/git-scripts/scripts/gph.sh
-已注册命令：gcs -> /path/to/git-scripts/scripts/gcs.sh
-已注册命令：gsc -> /path/to/git-scripts/scripts/gsc.sh
-
-注册完成！所有脚本已链接到 /usr/local/bin
-可以直接使用以下命令：
-  - gac
-  - gpf
-  - grh
-  - gcr
-  - gph
-  - gcs
-  - gsc
+```bash
+pnpm install -g .
 ```
 
-## 自定义脚本
+### 本地使用
 
-你可以在 `scripts/` 目录下添加自己的Git快捷脚本，然后运行 `register.sh` 注册到全局环境。
+或者在项目目录中使用pnpm dlx：
+
+```bash
+pnpm dlx gac "feat: 添加新功能"
+pnpm dlx gpf "fix: 修复bug"
+```
+
+### 开发模式
+
+如果你想在开发模式下使用这些脚本：
+
+```bash
+# 链接脚本到全局
+pnpm link
+
+# 使用脚本
+# 例如：
+gac "feat: 开发新功能"
+
+# 取消链接
+pnpm unlink
+```
 
 ## 注意事项
 
-1. 注册脚本需要root权限，因为要写入 `/usr/local/bin` 目录
-2. 确保 `/usr/local/bin` 已添加到系统PATH环境变量中
-3. 如果命令名已存在，注册脚本会更新链接（仅当是符号链接时）
-4. 非符号链接的同名文件会被跳过，避免覆盖系统命令
+1. 全局安装需要管理员权限
+2. 确保Node.js已安装并配置正确
+3. pnpm会自动将脚本添加到系统PATH中
 
 ## 更新脚本
 
-1. 修改 `scripts/` 目录下的脚本文件
-2. 脚本会自动更新，无需重新注册（因为使用的是符号链接）
-
-## 卸载脚本
-
-### 使用 unregister.sh 脚本
-
-你可以使用项目提供的 `unregister.sh` 脚本一键卸载所有注册的脚本：
-
-1. 确保 `unregister.sh` 有执行权限：
+1. 修改 `src/` 目录下的脚本文件
+2. 重新安装或链接脚本：
    ```bash
-   chmod +x unregister.sh
+   pnpm install -g .
+   # 或在开发模式下
+   pnpm link
    ```
-
-2. 运行卸载脚本（需要root权限）：
-   ```bash
-   sudo ./unregister.sh
-   ```
-
-### 手动卸载
-
-如果你想手动卸载，可以删除 `/usr/local/bin` 目录下的符号链接：
-
-```bash
-sudo rm /usr/local/bin/gac /usr/local/bin/gpf /usr/local/bin/grh /usr/local/bin/gcr /usr/local/bin/gph /usr/local/bin/gcs /usr/local/bin/gsc
-```
 
 ## 许可证
 
