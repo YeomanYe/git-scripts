@@ -45,8 +45,8 @@ program
       process.exit(1);
     }
 
-    // Get commits ahead of remote, ordered from oldest to newest
-    const commits = executeGitCommand(`git log --pretty=format:"%H %s" ${remoteBranch}..${currentBranch} | awk '{a[i++]=$0} END {for (j=i-1; j>=0; j--) print a[j]}'`).trim();
+    // Get commits ahead of remote, ordered from newest to oldest (default git log order)
+    const commits = executeGitCommand(`git log --pretty=format:"%H %s" ${remoteBranch}..${currentBranch}`).trim();
 
     if (!commits) {
       console.log(`Info: No local commits ahead of ${remoteBranch}`);
@@ -69,7 +69,7 @@ program
     } else {
       // Only stash the latest commit
       console.log('Stashing only the latest commit...');
-      const latestCommit = commitList[commitList.length - 1];
+      const latestCommit = commitList[0];
       const [commitHash, ...commitMessageParts] = latestCommit.split(' ');
       const commitMessage = commitMessageParts.join(' ');
       
