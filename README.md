@@ -60,6 +60,31 @@ gpf "docs: 更新README文档"
 grh
 ```
 
+### grn - Git Rebase N Commits
+
+**功能**：执行 `git rebase -i HEAD~N` 命令，对最近 N 个提交进行交互式 rebase。
+
+**使用方法**：
+```bash
+grn <n>
+```
+
+**参数**：
+- `<n>`：必需参数，指定要 rebase 的提交数量（正整数）
+
+**示例**：
+```bash
+# 对最近 3 个提交进行交互式 rebase
+grn 3
+
+# 对最近 5 个提交进行交互式 rebase
+grn 5
+```
+
+**说明**：
+- 该命令会打开交互式 rebase 编辑器，让你可以修改、合并、删除或重排提交
+- 使用方式与 `git rebase -i HEAD~N` 完全相同，但命令更简洁
+
 ### gcr - Git Clean Repository
 
 **功能**：清理Git仓库，通过执行 `git stash -u && git stash drop stash@{0}` 命令，用于删除所有未提交的修改（包括未跟踪文件）。
