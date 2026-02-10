@@ -107,4 +107,68 @@ describe('grn', () => {
       expect(error.status).toBe(1);
     }
   });
+
+  describe('-h option (squash with latest message)', () => {
+    it('edge: should show help when using -h without argument', () => {
+      const output = executeScript(tmpDir.path, 'grn -h');
+      expect(output).toContain('Usage:');
+    });
+
+    it('abnormal: should exit with error when -h has no commits', () => {
+      const testFile = path.join(tmpDir.path, 'test.txt');
+      fs.writeFileSync(testFile, 'content');
+      executeGitCommand(tmpDir.path, 'git add .');
+      executeGitCommand(tmpDir.path, 'git commit -m "single commit"');
+
+      try {
+        executeScript(tmpDir.path, 'grn -h 1');
+        expect(false).toBe(true);
+      } catch (error) {
+        expect(error.status).toBe(1);
+        expect(error.stdout || error.stderr).toContain('at least 2 commits');
+      }
+    });
+
+    it('abnormal: should exit with error when -h has non-numeric value', () => {
+      try {
+        executeScript(tmpDir.path, 'grn -h abc');
+        expect(false).toBe(true);
+      } catch (error) {
+        expect(error.status).toBe(1);
+        expect(error.stdout || error.stderr).toContain('positive integer');
+      }
+    });
+  });
+
+  describe('-t option (squash with nth commit message)', () => {
+    it('edge: should show help when using -t without argument', () => {
+      const output = executeScript(tmpDir.path, 'grn -t');
+      expect(output).toContain('Usage:');
+    });
+
+    it('abnormal: should exit with error when -t has no commits', () => {
+      const testFile = path.join(tmpDir.path, 'test.txt');
+      fs.writeFileSync(testFile, 'content');
+      executeGitCommand(tmpDir.path, 'git add .');
+      executeGitCommand(tmpDir.path, 'git commit -m "single commit"');
+
+      try {
+        executeScript(tmpDir.path, 'grn -t 1');
+        expect(false).toBe(true);
+      } catch (error) {
+        expect(error.status).toBe(1);
+        expect(error.stdout || error.stderr).toContain('at least 2 commits');
+      }
+    });
+
+    it('abnormal: should exit with error when -t has non-numeric value', () => {
+      try {
+        executeScript(tmpDir.path, 'grn -t abc');
+        expect(false).toBe(true);
+      } catch (error) {
+        expect(error.status).toBe(1);
+        expect(error.stdout || error.stderr).toContain('positive integer');
+      }
+    });
+  });
 });
