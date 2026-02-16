@@ -7,7 +7,7 @@
 ```
 ├── src/              # 存放所有Git快捷脚本
 ├── package.json      # 项目配置文件
-├── test/             # 测试文件目录
+├── __test__          # 测试文件目录
 └── README.md         # 项目说明文档
 ```
 
@@ -62,28 +62,43 @@ grh
 
 ### grn - Git Rebase N Commits
 
-**功能**：执行 `git rebase -i HEAD~N` 命令，对最近 N 个提交进行交互式 rebase。
+**功能**：对最近 N 个提交进行 rebase 操作。支持交互式 rebase 和自动 squash 模式。
 
 **使用方法**：
 ```bash
+# 交互式 rebase（打开编辑器）
 grn <n>
+
+# 自动 squash，使用最新的 commit message
+grn -h <n>
+
+# 自动 squash，使用第 n 次提交的 message
+grn -t <n>
 ```
 
 **参数**：
 - `<n>`：必需参数，指定要 rebase 的提交数量（正整数）
+- `-h, --head <n>`：自动 squash 最近的 n 个提交，使用最新提交的 message
+- `-t, --target <n>`：自动 squash 最近的 n 个提交，使用第 n 次提交的 message
 
 **示例**：
 ```bash
-# 对最近 3 个提交进行交互式 rebase
+# 交互式 rebase
 grn 3
-
-# 对最近 5 个提交进行交互式 rebase
 grn 5
+
+# 自动 squash，使用最新 message
+grn -h 3   # 将最近 3 个提交合并为 1 个，使用最新的 commit message
+
+# 自动 squash，使用第 n 次提交的 message
+grn -t 3   # 将最近 3 个提交合并为 1 个，使用第 3 次提交的 message
 ```
 
 **说明**：
-- 该命令会打开交互式 rebase 编辑器，让你可以修改、合并、删除或重排提交
-- 使用方式与 `git rebase -i HEAD~N` 完全相同，但命令更简洁
+- 不使用参数时，会打开交互式 rebase 编辑器
+- `-h` 选项自动执行 squash，无需打开编辑器，使用最新提交的 message
+- `-t` 选项自动执行 squash，使用第 n 次提交的 message 作为合并后的 message
+- squash 至少需要 2 个提交
 
 ### gcr - Git Clean Repository
 
