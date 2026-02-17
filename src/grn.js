@@ -111,7 +111,7 @@ Examples:
   $ grn 3        # Rebase last 3 commits interactively
   $ grn 5        # Rebase last 5 commits interactively
   $ grn -h 3     # Squash last 3 commits, use latest message
-  $ grn -t 3     # Squash last 3 commits, use 3rd commit message`);
+  $ grn -t 3     # Squash last 3 commits, use 3rd commit message`)
   .action((n, options) => {
     const headOption = options.head;
     const targetOption = options.target;
