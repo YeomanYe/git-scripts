@@ -18,58 +18,163 @@ function executeGitCommand(command) {
   }
 }
 
+// Helper function to execute git commands that might fail
+function tryExecuteGitCommand(command) {
+  try {
+    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
+    return output.trim();
+  } catch (error) {
+    return null;
+  }
+}
+
 // Get the latest commit message
 function getLatestCommitMessage() {
   return executeGitCommand('git log -1 --pretty=%B').trim();
 }
 
-// Create a temporary rebase todo file and execute rebase
+// Find the base commit for rebase (where current branch diverged)
+function getRemoteBaseCommit() {
+  const headCommit = tryExecuteGitCommand('git rev-parse HEAD');
+  if (!headCommit) {
+    return null;
+  }
+
+  const currentBranch = tryExecuteGitCommand('git rev-parse --abbrev-ref HEAD');
+
+  // Try to get the upstream branch of current local branch first
+  const upstreamBranch = tryExecuteGitCommand('git rev-parse --abbrev-ref --symbolic-full-name @{u}');
+  if (upstreamBranch) {
+    const remoteBranch = upstreamBranch.replace(/^[^/]+\//, ''); // Remove local branch prefix
+    const baseCommit = tryExecuteGitCommand(`git merge-base HEAD ${remoteBranch}`);
+    if (baseCommit && baseCommit !== headCommit) {
+      return { branch: remoteBranch, commit: baseCommit };
+    }
+  }
+
+  // Use git log to find which remote branch is in current branch's history
+  const priorityBranches = ['master', 'main', 'develop'];
+
+  // Try to find remote branch in commit history
+  const remoteBranches = tryExecuteGitCommand('git branch -r');
+  if (remoteBranches && !remoteBranches.includes('No remote branches')) {
+    const allRemoteBranches = remoteBranches
+      .split('\n')
+      .map(b => b.trim())
+      .filter(b => (b.startsWith('origin/') || b.startsWith('upstream/')) && !b.includes('->'));
+
+    // Priority: master, main, develop
+    for (const priority of priorityBranches) {
+      const branch = allRemoteBranches.find(b => b.endsWith(`/${priority}`));
+      if (branch) {
+        // Check if this remote branch is ancestor of HEAD using git log
+        const logOutput = tryExecuteGitCommand(`git log --oneline ${branch}..HEAD`);
+        if (logOutput !== '') {
+          // There are commits between remote branch and HEAD
+          // Use the remote branch itself as base
+          const remoteCommit = tryExecuteGitCommand(`git rev-parse ${branch}`);
+          if (remoteCommit && remoteCommit !== headCommit) {
+            return { branch, commit: remoteCommit };
+          }
+        } else {
+          // No commits between remote and HEAD, remote is ahead or same
+          // Use remote branch as base
+          const remoteCommit = tryExecuteGitCommand(`git rev-parse ${branch}`);
+          if (remoteCommit && remoteCommit !== headCommit) {
+            return { branch, commit: remoteCommit };
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: try local branches
+  const localBranches = tryExecuteGitCommand('git branch');
+  if (localBranches) {
+    const localBranchList = localBranches
+      .split('\n')
+      .map(b => b.trim())
+      .filter(b => b && b !== currentBranch && !b.startsWith('*'));
+
+    for (const priority of priorityBranches) {
+      const branch = localBranchList.find(b => b === priority);
+      if (branch) {
+        const baseCommit = tryExecuteGitCommand(`git merge-base HEAD ${branch}`);
+        if (baseCommit && baseCommit !== headCommit) {
+          return { branch, commit: baseCommit };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// Execute squash rebase using interactive rebase
 function executeSquashRebase(targetRef, squashCount, commitMessage) {
   const tempDir = os.tmpdir();
   const tempFile = path.join(tempDir, `git-rebase-todo-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
   try {
-    // Generate rebase todo file:
-    // First line: pick (keep the base commit)
-    // Second line: squash (merge all commits into the first one)
-    const pickCommit = executeGitCommand(`git log -${squashCount + 1} --pretty=format:"%H" | tail -1`).trim();
-    const commits = executeGitCommand(`git log -${squashCount} --pretty=format:"%H"`).trim().split('\n').reverse();
+    // Get the commits to squash (from target to HEAD, exclusive of target)
+    // Use --no-merges to exclude merge commits (cannot squash merge commits)
+    const commits = executeGitCommand(`git log ${targetRef}..HEAD --no-merges --pretty=format:"%H"`).trim().split('\n').filter(c => c);
 
-    // Write rebase todo file
-    let todoContent = `pick ${pickCommit}\n`;
-    commits.forEach((commitHash) => {
-      if (commitHash.trim()) {
-        todoContent += `squash ${commitHash.trim()}\n`;
+    if (commits.length === 0) {
+      console.log('Nothing to squash. No commits after the target.');
+      return;
+    }
+
+    // Generate rebase todo file
+    // First line: pick (keep the first commit after target)
+    // Rest: squash (merge all other commits into the first one)
+    let todoContent = '';
+    for (let i = 0; i < commits.length; i++) {
+      if (i === 0) {
+        todoContent += `pick ${commits[i]}\n`;
+      } else {
+        todoContent += `squash ${commits[i]}\n`;
       }
-    });
+    }
 
     fs.writeFileSync(tempFile, todoContent);
     fs.chmodSync(tempFile, 0o600);
 
-    // Get the base commit for soft reset
-    const baseCommit = executeGitCommand(`git log -${squashCount + 1} --pretty=format:"%H" | tail -1`).trim();
-
     console.log(`Squashing ${squashCount} commits...`);
 
-    // Use exec to set environment variables and run git rebase
-    const rebaseCmd = `GIT_SEQUENCE_EDITOR="cat ${tempFile}" GIT_EDITOR="cat" git rebase -i --keep-empty ${targetRef} 2>&1 || true`;
-    execSync(rebaseCmd, {
+    // Execute interactive rebase with custom editor that uses our todo file
+    const editorScript = path.join(tempDir, `git-editor-${Date.now()}.sh`);
+    const editorContent = `#!/bin/bash
+cat "${tempFile}" > "$1"
+`;
+    fs.writeFileSync(editorScript, editorContent);
+    fs.chmodSync(editorScript, 0o755);
+
+    execSync(`git rebase -i ${targetRef}`, {
       stdio: 'inherit',
-      encoding: 'utf8',
-      shell: 'bash',
-      env: { ...process.env }
+      env: {
+        ...process.env,
+        GIT_SEQUENCE_EDITOR: editorScript,
+        GIT_EDITOR: editorScript,
+      },
     });
 
-    // Now amend the commit with the desired message
-    const headCommit = executeGitCommand('git rev-parse HEAD').trim();
+    // Amend the commit with the desired message
     execSync(`git commit --amend -m "${commitMessage.replace(/"/g, '\\"')}"`, { stdio: 'inherit' });
     console.log(`Updated commit message to: "${commitMessage}"`);
 
     console.log('Squash completed successfully!');
+  } catch (error) {
+    console.error('Rebase failed:', error.message);
+    process.exit(1);
   } finally {
-    // Cleanup temp file
+    // Cleanup temp files
     if (fs.existsSync(tempFile)) {
       fs.unlinkSync(tempFile);
+    }
+    const editorScript = path.join(tempDir, `git-editor-${Date.now()}.sh`);
+    if (fs.existsSync(editorScript)) {
+      fs.unlinkSync(editorScript);
     }
   }
 }
@@ -80,11 +185,16 @@ const program = new Command();
 // Configure program
 program
   .name('grh')
-  .description('Rebase current branch onto its first commit, useful for cleaning up branch history')
+  .description('Rebase current branch onto remote/base commit, useful for cleaning up branch history')
   .version('1.0.0')
   .option('-m, --message <msg>', 'Rebase and use custom commit message for squashed commits')
   .usage('[-m <msg>]')
-  .addHelpText('after', `\nExamples:\n  $ grh                # Rebase to first commit, keep last message\n  $ grh -m "fix"       # Rebase to first commit, use custom message "fix"`)
+  .addHelpText('after', `
+Examples:
+  $ grh                # Rebase onto remote base, keep last message
+  $ grh -m "fix"       # Rebase onto remote base, use custom message "fix"
+
+If no remote branch is found, rebases onto the first commit.`)
   .action((options) => {
     let currentBranch;
     try {
@@ -94,29 +204,39 @@ program
       process.exit(1);
     }
 
-    const firstCommit = executeGitCommand(`git log --reverse --pretty=format:"%H" | head -1`).trim();
-    if (!firstCommit) {
+    // Try to find remote base commit
+    const remoteBase = getRemoteBaseCommit();
+    let targetRef;
+    let targetDescription;
+
+    if (remoteBase) {
+      targetRef = remoteBase.commit;
+      targetDescription = `remote ${remoteBase.branch}`;
+    } else {
+      // Fall back to first commit
+      targetRef = executeGitCommand(`git log --reverse --pretty=format:"%H" | head -1`).trim();
+      targetDescription = 'first commit';
+    }
+
+    if (!targetRef) {
       console.error('Error: No commits found on current branch');
       process.exit(1);
     }
 
-    // Count commits to squash (all commits except the first one)
-    const allCommits = executeGitCommand(`git log --pretty=format:"%H"`).trim().split('\n');
-    const squashCount = allCommits.length - 1;
+    // Get commits between target and HEAD
+    const commits = executeGitCommand(`git log ${targetRef}..HEAD --pretty=format:"%H"`).trim().split('\n').filter(c => c);
+    const squashCount = commits.length;
 
     if (squashCount < 1) {
-      console.log('Info: Only one commit exists, nothing to rebase');
+      console.log('Info: No commits to squash after the target');
       process.exit(0);
     }
 
-    const targetRef = firstCommit;
-    console.log(`Rebasing branch '${currentBranch}' onto its first commit '${firstCommit}'...`);
+    console.log(`Rebasing branch '${currentBranch}' onto its ${targetDescription} '${targetRef}'...`);
 
     if (options.message) {
-      // Use custom message
       executeSquashRebase(targetRef, squashCount, options.message);
     } else {
-      // Use latest commit message
       const latestMessage = getLatestCommitMessage();
       console.log(`Squashing ${squashCount} commits with latest message...`);
       executeSquashRebase(targetRef, squashCount, latestMessage);
