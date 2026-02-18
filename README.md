@@ -137,6 +137,53 @@ grn -m "fix: 修复 bug" 3   # 将最近 3 个提交合并为 1 个，使用自�
 gcr
 ```
 
+### gcw - Git Clear Worktrees
+
+**功能**：删除当前项目的所有 worktree（不包括主 worktree），用于清理项目中不再需要的 worktree 目录。
+
+**使用方法**：
+```bash
+# 删除所有 worktree（不包括主 worktree），需要确认
+gcw
+
+# 强制删除 worktree，无需检查未提交的更改
+gcw -f
+
+# 跳过确认提示，直接删除所有 worktree
+gcw -y
+
+# 危险：删除所有 worktree，包括主 worktree 目录
+gcw -a
+```
+
+**参数**：
+- `-f, --force`：强制删除 worktree，即使有未提交的更改
+- `-a, --all`：包括主 worktree（危险 - 会删除主目录）
+- `-y, --yes`：跳过确认提示
+
+**示例**：
+```bash
+# 删除所有 worktree
+gcw
+
+# 强制删除 worktree
+gcw -f
+
+# 跳过确认
+gcw -y
+
+# 删除所有 worktree 包括主目录
+gcw -a
+```
+
+**警告**：此命令会删除 worktree 目录，请在运行前确保已备份重要内容。
+
+**工作原理**：
+1. 列出当前项目的所有 worktree
+2. 显示将要删除的 worktree 列表
+3. 等待用户确认（除非使用 -y 选项）
+4. 逐个删除 worktree
+
 ### gph - Git Push
 
 **功能**：执行 `git add . && git commit -m "xxx" && git push` 命令，一键添加所有修改、提交并推送到远程仓库。

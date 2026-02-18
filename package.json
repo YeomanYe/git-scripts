@@ -11,6 +11,7 @@
     "gac": "./src/gac.js",
     "gcr": "./src/gcr.js",
     "gcs": "./src/gcs.js",
+    "gcw": "./src/gcw.js",
     "gpf": "./src/gpf.js",
     "gph": "./src/gph.js",
     "grh": "./src/grh.js",
