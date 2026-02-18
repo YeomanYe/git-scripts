@@ -53,12 +53,32 @@ gpf "docs: 更新README文档"
 
 ### grh - Git Rebase to First Commit
 
-**功能**：将当前分支rebase到其第一次提交。
+**功能**：将当前分支rebase到其第一次提交，支持自动squash所有提交。
 
 **使用方法**：
 ```bash
+# 基本的 rebase 操作，使用最新的 commit message
 grh
+
+# 使用自定义 commit message
+grh -m "custom message"
 ```
+
+**参数**：
+- `-m, --message <msg>`：使用自定义的 commit message 代替最新的提交 message
+
+**示例**：
+```bash
+# 基本 rebase，使用最新 message
+grh
+
+# 使用自定义 message
+grh -m "feat: 完成功能开发"
+```
+
+**说明**：
+- 如果只有一个提交，则不会执行 rebase 操作
+- 使用 `-m` 选项可以自定义合并后的 commit message
 
 ### grn - Git Rebase N Commits
 
@@ -74,12 +94,16 @@ grn -h <n>
 
 # 自动 squash，使用第 n 次提交的 message
 grn -t <n>
+
+# 自动 squash，使用自定义 commit message
+grn -m "custom message" <n>
 ```
 
 **参数**：
 - `<n>`：必需参数，指定要 rebase 的提交数量（正整数）
 - `-h, --head <n>`：自动 squash 最近的 n 个提交，使用最新提交的 message
 - `-t, --target <n>`：自动 squash 最近的 n 个提交，使用第 n 次提交的 message
+- `-m, --message <msg>`：自动 squash 最近的 n 个提交，使用自定义 message
 
 **示例**：
 ```bash
@@ -92,12 +116,16 @@ grn -h 3   # 将最近 3 个提交合并为 1 个，使用最新的 commit messa
 
 # 自动 squash，使用第 n 次提交的 message
 grn -t 3   # 将最近 3 个提交合并为 1 个，使用第 3 次提交的 message
+
+# 自动 squash，使用自定义 message
+grn -m "fix: 修复 bug" 3   # 将最近 3 个提交合并为 1 个，使用自定义 message
 ```
 
 **说明**：
 - 不使用参数时，会打开交互式 rebase 编辑器
 - `-h` 选项自动执行 squash，无需打开编辑器，使用最新提交的 message
 - `-t` 选项自动执行 squash，使用第 n 次提交的 message 作为合并后的 message
+- `-m` 选项自动执行 squash，使用自定义 message 作为合并后的 message（必须提供 N 参数）
 - squash 至少需要 2 个提交
 
 ### gcr - Git Clean Repository
