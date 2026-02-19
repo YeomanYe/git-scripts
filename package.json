@@ -12,6 +12,7 @@
     "gcr": "./src/gcr.js",
     "gcs": "./src/gcs.js",
     "gcw": "./src/gcw.js",
+    "gme": "./src/gme.js",
     "gpf": "./src/gpf.js",
     "gph": "./src/gph.js",
     "grh": "./src/grh.js",
