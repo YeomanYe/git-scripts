@@ -15,6 +15,20 @@ function executeGitCommand(command) {
   }
 }
 
+// Decode markers back to special characters
+// - First unescape existing markers: ::::X:::: → ::X::
+// - Then decode: ::NL:: → \n, ::CR:: → \r, ::TAB:: → \t
+function decodeMessage(message) {
+  let decoded = message;
+  // First unescape escaped markers
+  decoded = decoded.replace(/::::([A-Z]+)::::/g, '::$1::');
+  // Then decode special characters
+  decoded = decoded.replace(/::NL::/g, '\n');
+  decoded = decoded.replace(/::CR::/g, '\r');
+  decoded = decoded.replace(/::TAB::/g, '\t');
+  return decoded;
+}
+
 // Create commander instance
 const program = new Command();
 
@@ -45,38 +59,40 @@ program
 
     if (options.all) {
       console.log('Popping stash items in order and committing each...');
-      
+
       for (let i = 0; i < stashCount; i++) {
         // Get stash description
         const currentStashList = executeGitCommand('git stash list');
         const firstStashInfo = currentStashList.split('\n').filter(line => line.trim())[0];
         if (!firstStashInfo) break;
-        
+
         const stashDescription = firstStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
-        
+        const decodedMessage = decodeMessage(stashDescription);
+
         console.log();
         console.log(`Popping stash item: stash@{0}`);
         executeGitCommand('git stash pop');
-        
+
         executeGitCommand('git add .');
-        console.log(`Committing with message: ${stashDescription}`);
-        executeGitCommand(`git commit -m "${stashDescription}"`);
-        
+        console.log(`Committing with message: ${decodedMessage}`);
+        executeGitCommand(`git commit -m "${decodedMessage}"`);
+
         console.log('Successfully committed stash item');
       }
     } else {
       console.log('Popping only the latest stash item...');
-      
+
       // Get latest stash description
       const latestStashInfo = stashList.split('\n').filter(line => line.trim())[0];
       const latestStashDescription = latestStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
-      
+      const decodedMessage = decodeMessage(latestStashDescription);
+
       executeGitCommand('git stash pop');
-      
+
       executeGitCommand('git add .');
-      console.log(`Committing with message: ${latestStashDescription}`);
-      executeGitCommand(`git commit -m "${latestStashDescription}"`);
-      
+      console.log(`Committing with message: ${decodedMessage}`);
+      executeGitCommand(`git commit -m "${decodedMessage}"`);
+
       console.log('Successfully committed the latest stash item');
     }
 

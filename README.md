@@ -229,7 +229,7 @@ gph "docs: 更新README文档"
 
 ### gcs - Git Commit Stash
 
-**功能**：将当前分支相比远端多出来的 commit 依次存储到 stash 中，并将提交的 message 作为 stash 的注释。
+**功能**：将当前分支相比远端多出来的 commit 依次存储到 stash 中，并将提交的 message 作为 stash 的注释。支持特殊字符编码，以便在 gsc 还原时恢复原始格式。
 
 **使用方法**：
 ```bash
@@ -243,16 +243,25 @@ gcs -a
 **参数**：
 - `-a, --all`：Stash all commits ahead of remote
 
+**特殊字符支持**：
+- 换行符 `\n` → 编码为 `::NL::`
+- 回车符 `\r` → 编码为 `::CR::`
+- 制表符 `\t` → 编码为 `::TAB::`
+- 已有的标记 `::X::` → 转义为 `::::X::::`
+
+使用 gsc 还原时，这些编码会被自动还原为原始特殊字符。
+
 **工作原理**：
 1. 获取当前分支名称
 2. 检查对应的远端分支是否存在
 3. 获取本地比远端多的 commit 列表，按时间从早到晚排序
-4. 执行以下操作：
+4. 对 commit message 进行特殊字符编码
+5. 执行以下操作：
    - 不使用 `-a` 选项：只 stash 最新的 commit
    - 使用 `-a` 选项：依次 stash 所有超前于远端的 commit
    - 对于每个 commit，执行：
      - `git reset HEAD~1`
-     - `git stash push -m "commit_message" -u`
+     - `git stash push -m "encoded_message" -u`
 
 **示例**：
 ```bash
@@ -285,7 +294,7 @@ To apply them back, use 'git stash pop' or 'git stash apply'
 
 ### gsc - Git Stash Commit
 
-**功能**：从 stash 中恢复更改并提交，将 stash 记录的描述设置为 commit 的 message。
+**功能**：从 stash 中恢复更改并提交，将 stash 记录的描述设置为 commit 的 message。支持自动还原 gcs 编码的特殊字符。
 
 **使用方法**：
 ```bash
@@ -299,13 +308,21 @@ gsc -a
 **参数**：
 - `-a`：按顺序 pop 代码并 commit（从最早到最新）
 
+**特殊字符还原**：
+gsc 会自动将 gcs 编码的特殊字符还原为原始格式：
+- `::NL::` → 换行符 `\n`
+- `::CR::` → 回车符 `\r`
+- `::TAB::` → 制表符 `\t`
+- `::::X::::` → `::X::`（转义的标记）
+
 **工作原理**：
 1. 检查是否有 stash 项可用
-2. 对于单个 stash 项：
+2. 获取 stash 描述并进行特殊字符解码
+3. 对于单个 stash 项：
    - 执行 `git stash pop`
    - 执行 `git add .` 暂存所有更改
-   - 使用 stash 描述作为 commit message 执行 `git commit`
-3. 对于多个 stash 项（使用 `-a`）：
+   - 使用解码后的消息执行 `git commit`
+4. 对于多个 stash 项（使用 `-a`）：
    - 按顺序（从最早到最新）执行上述操作
 
 **示例**：

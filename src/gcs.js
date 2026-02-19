@@ -15,6 +15,19 @@ function executeGitCommand(command, options = {}) {
   }
 }
 
+// Encode special characters to markers for stash message
+// - Escape existing markers first: ::X:: → ::::X::::
+// - Then encode: \n → ::NL::, \r → ::CR::, \t → ::TAB::
+function encodeMessage(message) {
+  // First escape any existing markers to prevent conflicts
+  let encoded = message.replace(/::([A-Z]+)::/g, '::::$1::::');
+  // Then encode special characters
+  encoded = encoded.replace(/\n/g, '::NL::');
+  encoded = encoded.replace(/\r/g, '::CR::');
+  encoded = encoded.replace(/\t/g, '::TAB::');
+  return encoded;
+}
+
 // Create commander instance
 const program = new Command();
 
@@ -60,10 +73,11 @@ program
       for (const commit of commitList) {
         const [commitHash, ...commitMessageParts] = commit.split(' ');
         const commitMessage = commitMessageParts.join(' ');
-        
+        const encodedMessage = encodeMessage(commitMessage);
+
         executeGitCommand('git reset HEAD~1');
-        executeGitCommand(`git stash push -m "${commitMessage}" -u`);
-        
+        executeGitCommand(`git stash push -m "${encodedMessage}" -u`);
+
         console.log(`Stashed commit: ${commitMessage}`);
       }
     } else {
@@ -72,10 +86,11 @@ program
       const latestCommit = commitList[0];
       const [commitHash, ...commitMessageParts] = latestCommit.split(' ');
       const commitMessage = commitMessageParts.join(' ');
-      
+      const encodedMessage = encodeMessage(commitMessage);
+
       executeGitCommand('git reset HEAD~1');
-      executeGitCommand(`git stash push -m "${commitMessage}" -u`);
-      
+      executeGitCommand(`git stash push -m "${encodedMessage}" -u`);
+
       console.log(`Stashed commit: ${commitMessage}`);
     }
 

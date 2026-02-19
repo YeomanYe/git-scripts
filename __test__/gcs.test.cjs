@@ -75,13 +75,13 @@ describe('gcs', () => {
     fs.writeFileSync(initialFile, 'initial content');
     executeGitCommand(tmpDir.path, 'git add .');
     executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
-    
+
     // Create a unique bare repo as remote for each test
     const bareRepo = `${tmpDir.path}/bare-repo`;
     executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
-    
+
     // Create multiple new commits
     const commitMessages = ['commit 1', 'commit 2', 'commit 3'];
     for (const msg of commitMessages) {
@@ -90,19 +90,100 @@ describe('gcs', () => {
       executeGitCommand(tmpDir.path, 'git add .');
       executeGitCommand(tmpDir.path, `git commit -m "${msg}"`);
     }
-    
+
     // Execute gcs -a command
     executeScript(tmpDir.path, 'gcs -a');
-    
+
     // Verify all commits were stashed
     const stashList = executeGitCommand(tmpDir.path, 'git stash list');
     for (const msg of commitMessages) {
       expect(stashList).toContain(msg);
     }
-    
+
     // Verify current branch is at the same commit as remote
     const localCommit = executeGitCommand(tmpDir.path, 'git rev-parse HEAD').trim();
     const remoteCommit = executeGitCommand(tmpDir.path, 'git rev-parse origin/master').trim();
     expect(localCommit).toBe(remoteCommit);
+  });
+
+  it('normal: should stash commit with tab character', () => {
+    // Create initial commit
+    const initialFile = path.join(tmpDir.path, 'initial.txt');
+    fs.writeFileSync(initialFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a unique bare repo as remote
+    const bareRepo = `${tmpDir.path}/bare-repo`;
+    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
+    executeGitCommand(tmpDir.path, 'git push -u origin master');
+
+    // Create a commit with tab in message
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feat:\tadd feature"');
+
+    // Execute gcs command
+    executeScript(tmpDir.path, 'gcs');
+
+    // Verify the stash contains encoded tab
+    const stashList = executeGitCommand(tmpDir.path, 'git stash list');
+    expect(stashList).toContain('::TAB::');
+  });
+
+  it('edge: should escape existing markers to prevent conflicts', () => {
+    // Create initial commit
+    const initialFile = path.join(tmpDir.path, 'initial.txt');
+    fs.writeFileSync(initialFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a unique bare repo as remote
+    const bareRepo = `${tmpDir.path}/bare-repo`;
+    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
+    executeGitCommand(tmpDir.path, 'git push -u origin master');
+
+    // Create a commit with marker-like text in message
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feat: test ::NL:: marker"');
+
+    // Execute gcs command
+    executeScript(tmpDir.path, 'gcs');
+
+    // Verify existing marker is escaped
+    const stashList = executeGitCommand(tmpDir.path, 'git stash list');
+    expect(stashList).toContain('::::NL::::');
+  });
+
+  it('normal: should preserve backslash-n as literal characters', () => {
+    // Create initial commit
+    const initialFile = path.join(tmpDir.path, 'initial.txt');
+    fs.writeFileSync(initialFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a unique bare repo as remote
+    const bareRepo = `${tmpDir.path}/bare-repo`;
+    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
+    executeGitCommand(tmpDir.path, 'git push -u origin master');
+
+    // Create a commit with literal \n in message (backslash followed by n)
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feat: test \\\\n in message"');
+
+    // Execute gcs command
+    executeScript(tmpDir.path, 'gcs');
+
+    // Verify the stash contains the message
+    const stashList = executeGitCommand(tmpDir.path, 'git stash list');
+    expect(stashList).toContain('test \\n in message');
   });
 });
