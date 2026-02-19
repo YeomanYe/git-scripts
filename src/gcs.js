@@ -58,40 +58,37 @@ program
       process.exit(1);
     }
 
-    // Get commits ahead of remote, ordered from newest to oldest (default git log order)
-    const commits = executeGitCommand(`git log --pretty=format:"%H %s" ${remoteBranch}..${currentBranch}`).trim();
+    // Get list of commit hashes ahead of remote
+    const commitHashes = executeGitCommand(`git log --pretty=format:"%H" ${remoteBranch}..${currentBranch}`).trim().split('\n').filter(h => h);
 
-    if (!commits) {
+    if (!commitHashes || commitHashes.length === 0) {
       console.log(`Info: No local commits ahead of ${remoteBranch}`);
       process.exit(0);
     }
 
-    const commitList = commits.split('\n');
-
     if (options.all) {
       console.log('Stashing all commits step by step...');
-      for (const commit of commitList) {
-        const [commitHash, ...commitMessageParts] = commit.split(' ');
-        const commitMessage = commitMessageParts.join(' ');
+      for (const commitHash of commitHashes) {
+        // Get full commit message for each commit
+        const commitMessage = executeGitCommand(`git log --format=%B -1 ${commitHash}`).trim();
         const encodedMessage = encodeMessage(commitMessage);
 
         executeGitCommand('git reset HEAD~1');
         executeGitCommand(`git stash push -m "${encodedMessage}" -u`);
 
-        console.log(`Stashed commit: ${commitMessage}`);
+        console.log(`Stashed commit: ${commitMessage.split('\n')[0]}`);
       }
     } else {
       // Only stash the latest commit
       console.log('Stashing only the latest commit...');
-      const latestCommit = commitList[0];
-      const [commitHash, ...commitMessageParts] = latestCommit.split(' ');
-      const commitMessage = commitMessageParts.join(' ');
+      const commitHash = commitHashes[0];
+      const commitMessage = executeGitCommand(`git log --format=%B -1 ${commitHash}`).trim();
       const encodedMessage = encodeMessage(commitMessage);
 
       executeGitCommand('git reset HEAD~1');
       executeGitCommand(`git stash push -m "${encodedMessage}" -u`);
 
-      console.log(`Stashed commit: ${commitMessage}`);
+      console.log(`Stashed commit: ${commitMessage.split('\n')[0]}`);
     }
 
     console.log();
