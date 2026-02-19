@@ -32,6 +32,30 @@ gac "fix: 修复表单验证bug"
 gac "docs: 更新README文档"
 ```
 
+### gme - Git Commit Message
+
+**功能**：执行 `git commit -m "xxx"` 命令，直接提交已暂存的修改（不包含 `git add`，等价于 `git commit -m`）。
+
+**使用方法**：
+```bash
+gme "feat: 添加新功能"
+```
+
+**参数**：
+- 必须提供提交信息，例如：`"feat: xxx"`、`"fix: xxx"` 等
+
+**示例**：
+```bash
+gme "feat: 实现用户登录功能"
+gme "fix: 修复表单验证bug"
+gme "docs: 更新README文档"
+```
+
+**说明**：
+- 此命令不会执行 `git add`，只执行 `git commit -m`
+- 需要先使用 `git add` 暂存文件，然后再使用 gme 提交
+- 功能上等同于 `git commit -m "xxx"`
+
 ### gpf - Git Push Force
 
 **功能**：执行 `git add . && git commit -m "xxx" && git push -f` 命令，一键添加所有修改、提交并强制推送到远程仓库。
@@ -334,6 +358,7 @@ pnpm install -g .
 
 ```bash
 pnpm dlx gac "feat: 添加新功能"
+pnpm dlx gme "feat: 添加新功能"
 pnpm dlx gpf "fix: 修复bug"
 ```
 
@@ -348,6 +373,7 @@ pnpm link
 # 使用脚本
 # 例如：
 gac "feat: 开发新功能"
+gme "feat: 提交已暂存的修改"
 
 # 取消链接
 pnpm unlink
