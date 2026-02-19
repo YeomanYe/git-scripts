@@ -32,29 +32,36 @@ gac "fix: 修复表单验证bug"
 gac "docs: 更新README文档"
 ```
 
-### gme - Git Commit Message
+### gme - Git Merge
 
-**功能**：执行 `git commit -m "xxx"` 命令，直接提交已暂存的修改（不包含 `git add`，等价于 `git commit -m`）。
+**功能**：执行 `git merge` 命令，将指定的 commit 或 branch 合并到当前分支。
 
 **使用方法**：
 ```bash
-gme "feat: 添加新功能"
+gme <commit|branch>
 ```
 
 **参数**：
-- 必须提供提交信息，例如：`"feat: xxx"`、`"fix: xxx"` 等
+- `<commit|branch>`：必需参数，要合并的 commit 哈希值或分支名
+
+**选项**：
+- `-e, --edit`：编辑合并 commit 的消息
+- `--no-ff`：强制创建合并提交（即使可以 fast-forward）
 
 **示例**：
 ```bash
-gme "feat: 实现用户登录功能"
-gme "fix: 修复表单验证bug"
-gme "docs: 更新README文档"
-```
+# 合并分支
+gme feature-branch
 
-**说明**：
-- 此命令不会执行 `git add`，只执行 `git commit -m`
-- 需要先使用 `git add` 暂存文件，然后再使用 gme 提交
-- 功能上等同于 `git commit -m "xxx"`
+# 使用 commit hash 合并
+gme abc1234
+
+# 强制创建合并提交
+gme --no-ff feature-branch
+
+# 编辑合并消息
+gme -e feature-branch
+```
 
 ### gpf - Git Push Force
 

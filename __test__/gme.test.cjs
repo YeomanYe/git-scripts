@@ -27,9 +27,9 @@ describe('gme', () => {
     executeGitCommand(tmpDir.path, 'git config user.email "test@example.com"');
     executeGitCommand(tmpDir.path, 'git config user.name "Test User"');
 
-    // Create initial commit so we can make more commits
-    const testFile = path.join(tmpDir.path, 'initial.txt');
-    fs.writeFileSync(testFile, 'initial content');
+    // Create initial commit on master
+    const testFile = path.join(tmpDir.path, 'master.txt');
+    fs.writeFileSync(testFile, 'master content');
     executeGitCommand(tmpDir.path, 'git add .');
     executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
   });
@@ -39,65 +39,92 @@ describe('gme', () => {
     await tmpDir.cleanup();
   });
 
-  it('normal: should commit changes with provided message', () => {
-    // Create a test file and stage it
-    const testFile = path.join(tmpDir.path, 'test.txt');
-    fs.writeFileSync(testFile, 'test content');
+  it('normal: should merge a branch', () => {
+    // Create a new branch and make a commit
+    executeGitCommand(tmpDir.path, 'git checkout -b feature');
+    const featureFile = path.join(tmpDir.path, 'feature.txt');
+    fs.writeFileSync(featureFile, 'feature content');
     executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feature commit"');
 
-    // Execute gme command
-    executeScript(tmpDir.path, 'gme "test commit"');
+    // Switch back to master
+    executeGitCommand(tmpDir.path, 'git checkout master');
 
-    // Verify the commit was created
+    // Execute gme to merge the feature branch
+    executeScript(tmpDir.path, 'gme feature');
+
+    // Verify the merge was successful
     const log = executeGitCommand(tmpDir.path, 'git log --oneline');
-    expect(log).toContain('test commit');
+    expect(log).toContain('feature commit');
+    expect(log).toContain('initial commit');
   });
 
-  it('normal: should commit with feat prefix message', () => {
-    // Create and stage a file
-    const testFile = path.join(tmpDir.path, 'feature.txt');
-    fs.writeFileSync(testFile, 'feature content');
+  it('normal: should merge by commit hash', () => {
+    // Create a new branch and make a commit
+    executeGitCommand(tmpDir.path, 'git checkout -b feature');
+    const featureFile = path.join(tmpDir.path, 'feature.txt');
+    fs.writeFileSync(featureFile, 'feature content');
     executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feature commit"');
 
-    // Execute gme with feat message
-    executeScript(tmpDir.path, 'gme "feat: add new feature"');
+    // Get the commit hash
+    const commitHash = executeGitCommand(tmpDir.path, 'git rev-parse HEAD').trim();
 
-    // Verify the commit
+    // Switch back to master
+    executeGitCommand(tmpDir.path, 'git checkout master');
+
+    // Execute gme to merge by commit hash
+    executeScript(tmpDir.path, `gme ${commitHash}`);
+
+    // Verify the merge was successful
     const log = executeGitCommand(tmpDir.path, 'git log --oneline');
-    expect(log).toContain('feat: add new feature');
+    expect(log).toContain('feature commit');
   });
 
-  it('normal: should commit with fix prefix message', () => {
-    // Create and stage a file
-    const testFile = path.join(tmpDir.path, 'fix.txt');
-    fs.writeFileSync(testFile, 'fix content');
+  it('normal: should merge with --no-ff option', () => {
+    // Create a new branch and make a commit
+    executeGitCommand(tmpDir.path, 'git checkout -b feature');
+    const featureFile = path.join(tmpDir.path, 'feature.txt');
+    fs.writeFileSync(featureFile, 'feature content');
     executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "feature commit"');
 
-    // Execute gme with fix message
-    executeScript(tmpDir.path, 'gme "fix: resolve bug"');
+    // Switch back to master and make another commit so it's not fast-forward
+    executeGitCommand(tmpDir.path, 'git checkout master');
+    const masterFile = path.join(tmpDir.path, 'master2.txt');
+    fs.writeFileSync(masterFile, 'master content 2');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "master commit"');
 
-    // Verify the commit
+    // Execute gme with --no-ff option
+    executeScript(tmpDir.path, 'gme --no-ff feature');
+
+    // Verify the merge commit was created
     const log = executeGitCommand(tmpDir.path, 'git log --oneline');
-    expect(log).toContain('fix: resolve bug');
+    expect(log).toContain('Merge branch');
   });
 
-  it('edge: should handle empty commit message', () => {
-    // This tests behavior with empty message - git will fail but that's expected
-    const testFile = path.join(tmpDir.path, 'empty.txt');
-    fs.writeFileSync(testFile, 'empty content');
-    executeGitCommand(tmpDir.path, 'git add .');
+  it('edge: should fail when merge has conflicts', () => {
+    // Create a new branch and modify the same file differently
+    executeGitCommand(tmpDir.path, 'git checkout -b feature');
 
-    // Execute gme - should fail because git requires a message
+    // Modify master.txt in feature branch
+    const featureFile = path.join(tmpDir.path, 'master.txt');
+    fs.writeFileSync(featureFile, 'feature modified');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "modify file"');
+
+    // Switch back to master
+    executeGitCommand(tmpDir.path, 'git checkout master');
+
+    // Modify master.txt in master branch
+    fs.writeFileSync(featureFile, 'master modified');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "modify file in master"');
+
+    // Execute gme - should fail due to conflict
     expect(() => {
-      executeScript(tmpDir.path, 'gme ""');
-    }).toThrow();
-  });
-
-  it('abnormal: should fail when no staged changes', () => {
-    // Don't stage any changes
-    // Execute gme - should fail because nothing to commit
-    expect(() => {
-      executeScript(tmpDir.path, 'gme "this should fail"');
+      executeScript(tmpDir.path, 'gme feature');
     }).toThrow();
   });
 
@@ -107,6 +134,6 @@ describe('gme', () => {
 
     // Verify help message is displayed
     expect(output).toContain('Usage: gme');
-    expect(output).toContain('git commit -m');
+    expect(output).toContain('git merge');
   });
 });
