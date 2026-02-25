@@ -17,7 +17,7 @@ function executeGitCommand(command) {
 
 // Decode markers back to special characters
 // - First unescape existing markers: ::::X:::: → ::X::
-// - Then decode: ::NL:: → \n, ::CR:: → \r, ::TAB:: → \t
+// - Then decode: ::NL:: → \n, ::CR:: → \r, ::TAB:: → \t, ::DQ:: → "
 function decodeMessage(message) {
   let decoded = message;
   // First unescape escaped markers
@@ -26,6 +26,7 @@ function decodeMessage(message) {
   decoded = decoded.replace(/::NL::/g, '\n');
   decoded = decoded.replace(/::CR::/g, '\r');
   decoded = decoded.replace(/::TAB::/g, '\t');
+  decoded = decoded.replace(/::DQ::/g, '"');
   return decoded;
 }
 
@@ -68,6 +69,8 @@ program
 
         const stashDescription = firstStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
         const decodedMessage = decodeMessage(stashDescription);
+        // Escape double quotes for shell command
+        const escapedMessage = decodedMessage.replace(/"/g, '\\"');
 
         console.log();
         console.log(`Popping stash item: stash@{0}`);
@@ -75,7 +78,7 @@ program
 
         executeGitCommand('git add .');
         console.log(`Committing with message: ${decodedMessage}`);
-        executeGitCommand(`git commit -m "${decodedMessage}"`);
+        executeGitCommand(`git commit -m "${escapedMessage}"`);
 
         console.log('Successfully committed stash item');
       }
@@ -86,12 +89,14 @@ program
       const latestStashInfo = stashList.split('\n').filter(line => line.trim())[0];
       const latestStashDescription = latestStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
       const decodedMessage = decodeMessage(latestStashDescription);
+      // Escape double quotes for shell command
+      const escapedMessage = decodedMessage.replace(/"/g, '\\"');
 
       executeGitCommand('git stash pop');
 
       executeGitCommand('git add .');
       console.log(`Committing with message: ${decodedMessage}`);
-      executeGitCommand(`git commit -m "${decodedMessage}"`);
+      executeGitCommand(`git commit -m "${escapedMessage}"`);
 
       console.log('Successfully committed the latest stash item');
     }

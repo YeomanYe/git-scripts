@@ -214,4 +214,31 @@ describe('gcs', () => {
     const stashList = executeGitCommand(tmpDir.path, 'git stash list');
     expect(stashList).toContain('::NL::');
   });
+
+  it('normal: should stash commit with double quote in message', () => {
+    // Create initial commit
+    const initialFile = path.join(tmpDir.path, 'initial.txt');
+    fs.writeFileSync(initialFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a unique bare repo as remote
+    const bareRepo = `${tmpDir.path}/bare-repo`;
+    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
+    executeGitCommand(tmpDir.path, 'git push -u origin master');
+
+    // Create a commit with double quote in message
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m \'feat: add "foo" feature\'');
+
+    // Execute gcs command
+    executeScript(tmpDir.path, 'gcs');
+
+    // Verify the stash contains encoded double quote
+    const stashList = executeGitCommand(tmpDir.path, 'git stash list');
+    expect(stashList).toContain('::DQ::');
+  });
 });

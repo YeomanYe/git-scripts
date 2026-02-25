@@ -17,7 +17,7 @@ function executeGitCommand(command, options = {}) {
 
 // Encode special characters to markers for stash message
 // - Escape existing markers first: ::X:: → ::::X::::
-// - Then encode: \n → ::NL::, \r → ::CR::, \t → ::TAB::
+// - Then encode: \n → ::NL::, \r → ::CR::, \t → ::TAB::, " → ::DQ::
 function encodeMessage(message) {
   // First escape any existing markers to prevent conflicts
   let encoded = message.replace(/::([A-Z]+)::/g, '::::$1::::');
@@ -25,6 +25,7 @@ function encodeMessage(message) {
   encoded = encoded.replace(/\n/g, '::NL::');
   encoded = encoded.replace(/\r/g, '::CR::');
   encoded = encoded.replace(/\t/g, '::TAB::');
+  encoded = encoded.replace(/"/g, '::DQ::');
   return encoded;
 }
 

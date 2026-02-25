@@ -169,4 +169,26 @@ describe('gsc', () => {
     const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
     expect(log).toContain('\\n');
   });
+
+  it('normal: should decode double quote when popping stash', () => {
+    // Create initial commit
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a stash with encoded double quote (as gcs would create)
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    // gcs encodes " as ::DQ::, so we simulate that
+    executeGitCommand(tmpDir.path, 'git stash push -m "feat: add ::DQ::foo::DQ:: feature"');
+
+    // Execute gsc command - should decode the message
+    executeScript(tmpDir.path, 'gsc');
+
+    // Verify the commit was created with the double quote
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
+    expect(log).toContain('"foo"');
+  });
 });
