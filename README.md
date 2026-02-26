@@ -314,6 +314,7 @@ gsc -a
 
 **参数**：
 - `-a`：按顺序 pop 代码并 commit（从最早到最新）
+- `-n`：跳过 commit hooks（等同于 `git commit -n`）
 
 **特殊字符还原**：
 gsc 会自动将 gcs 编码的特殊字符还原为原始格式：

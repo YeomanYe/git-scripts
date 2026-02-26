@@ -191,4 +191,50 @@ describe('gsc', () => {
     const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
     expect(log).toContain('"foo"');
   });
+
+  it('normal: should accept -n option to skip commit hooks', () => {
+    // Create initial commit
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create a stash
+    const newFile = path.join(tmpDir.path, 'new.txt');
+    fs.writeFileSync(newFile, 'new content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git stash push -m "feat: add feature"');
+
+    // Execute gsc with -n option - should skip hooks
+    executeScript(tmpDir.path, 'gsc -n');
+
+    // Verify the commit was created
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline');
+    expect(log).toContain('feat: add feature');
+  });
+
+  it('normal: should accept -n option with -a to skip commit hooks', () => {
+    // Create initial commit
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'initial content');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+
+    // Create multiple stashes
+    for (let i = 1; i <= 3; i++) {
+      const newFile = path.join(tmpDir.path, `new${i}.txt`);
+      fs.writeFileSync(newFile, `content ${i}`);
+      executeGitCommand(tmpDir.path, 'git add .');
+      executeGitCommand(tmpDir.path, `git stash push -m "feat: commit ${i}"`);
+    }
+
+    // Execute gsc -a -n to pop all and skip hooks
+    executeScript(tmpDir.path, 'gsc -a -n');
+
+    // Verify all commits were created
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline');
+    expect(log).toContain('feat: commit 1');
+    expect(log).toContain('feat: commit 2');
+    expect(log).toContain('feat: commit 3');
+  });
 });

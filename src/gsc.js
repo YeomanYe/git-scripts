@@ -40,7 +40,8 @@ program
   .version('1.0.0')
   .usage('[options]')
   .option('-a, --all', 'Pop and commit all stash items')
-  .addHelpText('after', `\nExamples:\n  $ gsc              Pop and commit the latest stash item\n  $ gsc -a           Pop and commit all stash items`)
+  .option('-n, --no-verify', 'Skip commit hooks (equivalent to git commit -n)')
+  .addHelpText('after', `\nExamples:\n  $ gsc              Pop and commit the latest stash item\n  $ gsc -a           Pop and commit all stash items\n  $ gsc -n           Pop and commit without running commit hooks`)
   .action((options) => {
     // Check if there are stash items
     let stashCount;
@@ -71,6 +72,8 @@ program
         const decodedMessage = decodeMessage(stashDescription);
         // Escape double quotes for shell command
         const escapedMessage = decodedMessage.replace(/"/g, '\\"');
+        // Add -n flag if --no-verify is specified
+        const noVerifyFlag = options.noVerify ? '-n' : '';
 
         console.log();
         console.log(`Popping stash item: stash@{0}`);
@@ -78,7 +81,7 @@ program
 
         executeGitCommand('git add .');
         console.log(`Committing with message: ${decodedMessage}`);
-        executeGitCommand(`git commit -m "${escapedMessage}"`);
+        executeGitCommand(`git commit ${noVerifyFlag} -m "${escapedMessage}"`);
 
         console.log('Successfully committed stash item');
       }
@@ -91,12 +94,14 @@ program
       const decodedMessage = decodeMessage(latestStashDescription);
       // Escape double quotes for shell command
       const escapedMessage = decodedMessage.replace(/"/g, '\\"');
+      // Add -n flag if --no-verify is specified
+      const noVerifyFlag = options.noVerify ? '-n' : '';
 
       executeGitCommand('git stash pop');
 
       executeGitCommand('git add .');
       console.log(`Committing with message: ${decodedMessage}`);
-      executeGitCommand(`git commit -m "${escapedMessage}"`);
+      executeGitCommand(`git commit ${noVerifyFlag} -m "${escapedMessage}"`);
 
       console.log('Successfully committed the latest stash item');
     }
