@@ -49,9 +49,22 @@ describe('gac', () => {
   it('should show help message when using -h option', () => {
     // Execute gac with -h option
     const output = executeScript(tmpDir.path, 'gac -h');
-    
+
     // Verify help message is displayed
     expect(output).toContain('Usage: gac');
     expect(output).toContain('Quickly add all changes and commit with the provided message');
+  });
+
+  it('normal: should accept -n option to skip commit hooks', () => {
+    // Create a test file
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'test content');
+
+    // Execute gac command with -n option
+    executeScript(tmpDir.path, 'gac -n "test commit with -n"');
+
+    // Verify the commit was created
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline');
+    expect(log).toContain('test commit with -n');
   });
 });

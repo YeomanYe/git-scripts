@@ -25,11 +25,15 @@ gac "feat: 添加新功能"
 **参数**：
 - 必须提供提交信息，例如：`"feat: xxx"`、`"fix: xxx"` 等
 
+**选项**：
+- `-n`：跳过 commit hooks（等同于 `git commit -n`）
+
 **示例**：
 ```bash
 gac "feat: 实现用户登录功能"
 gac "fix: 修复表单验证bug"
 gac "docs: 更新README文档"
+gac -n "feat: 添加新功能"
 ```
 
 ### gme - Git Merge

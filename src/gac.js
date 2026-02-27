@@ -23,12 +23,14 @@ program
   .name('gac')
   .description('Quickly add all changes and commit with the provided message')
   .version('1.0.0')
-  .usage('[commit-message]')
+  .usage('[options] <commit-message>')
   .argument('<commit-message>', 'Commit message for the git commit')
-  .addHelpText('after', `\nExamples:\n  $ gac "feat: add new feature"\n  $ gac "fix: resolve bug"`)
-  .action((message) => {
+  .option('-n, --no-verify', 'Skip commit hooks (equivalent to git commit -n)')
+  .addHelpText('after', `\nExamples:\n  $ gac "feat: add new feature"\n  $ gac "fix: resolve bug"\n  $ gac -n "feat: add new feature"`)
+  .action((message, options) => {
+    const noVerifyFlag = options.noVerify ? '-n' : '';
     executeGitCommand('git add .');
-    executeGitCommand(`git commit -m "${message}"`);
+    executeGitCommand(`git commit ${noVerifyFlag} -m "${message}"`);
   });
 
 // Parse arguments
