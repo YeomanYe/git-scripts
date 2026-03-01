@@ -67,4 +67,46 @@ describe('gac', () => {
     const log = executeGitCommand(tmpDir.path, 'git log --oneline');
     expect(log).toContain('test commit with -n');
   });
+
+  it('normal: should handle escaped double quotes in message', () => {
+    // Create a test file
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'test content');
+
+    // Execute gac command with escaped double quotes
+    // Input: "test \"quote\" here" → should become: test "quote" here
+    executeScript(tmpDir.path, 'gac "test \\"quote\\" here"');
+
+    // Verify the commit was created with the double quotes
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
+    expect(log).toContain('test "quote" here');
+  });
+
+  it('normal: should handle single quotes in message', () => {
+    // Create a test file
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'test content');
+
+    // Single quotes don't need escaping when using double quotes around the argument
+    // Input: "test 'quote' here" → should become: test 'quote' here
+    executeScript(tmpDir.path, 'gac "test \'quote\' here"');
+
+    // Verify the commit was created with the single quotes
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
+    expect(log).toContain("test 'quote' here");
+  });
+
+  it('normal: should handle both escaped double and single quotes', () => {
+    // Create a test file
+    const testFile = path.join(tmpDir.path, 'test.txt');
+    fs.writeFileSync(testFile, 'test content');
+
+    // Execute gac command with both quotes - escaped double quotes, plain single quotes
+    // Input: "test \"double\" and 'single'" → should become: test "double" and 'single'
+    executeScript(tmpDir.path, 'gac "test \\"double\\" and \'single\'"');
+
+    // Verify the commit was created with both quotes
+    const log = executeGitCommand(tmpDir.path, 'git log --oneline -1 --format="%B"');
+    expect(log).toContain('test "double" and \'single\'');
+  });
 });

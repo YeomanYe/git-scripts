@@ -28,12 +28,17 @@ gac "feat: 添加新功能"
 **选项**：
 - `-n`：跳过 commit hooks（等同于 `git commit -n`）
 
+**引号转义**：
+- 支持使用 `\"` 转义双引号，使用 `\'` 转义单引号
+- 例如：`gac "feat: 添加 \"双引号\" 和 \'单引号\'"` → commit message 为 `feat: 添加 "双引号" 和 '单引号'`
+
 **示例**：
 ```bash
 gac "feat: 实现用户登录功能"
 gac "fix: 修复表单验证bug"
 gac "docs: 更新README文档"
 gac -n "feat: 添加新功能"
+gac "feat: 添加 \"双引号\""
 ```
 
 ### gme - Git Merge

@@ -15,6 +15,16 @@ function executeGitCommand(command) {
   }
 }
 
+// Unescape quotes from command line input: \" → ", \' → '
+function unescapeQuotes(message) {
+  return message.replace(/\\"/g, '"').replace(/\\'/g, "'");
+}
+
+// Escape quotes for shell command: " → \"
+function escapeQuotes(message) {
+  return message.replace(/"/g, '\\"');
+}
+
 // Create commander instance
 const program = new Command();
 
@@ -29,8 +39,12 @@ program
   .addHelpText('after', `\nExamples:\n  $ gac "feat: add new feature"\n  $ gac "fix: resolve bug"\n  $ gac -n "feat: add new feature"`)
   .action((message, options) => {
     const noVerifyFlag = options.noVerify ? '-n' : '';
+    // Unescape input: \" → ", \' → '
+    const unescapedMessage = unescapeQuotes(message);
+    // Escape for shell: " → \"
+    const escapedMessage = escapeQuotes(unescapedMessage);
     executeGitCommand('git add .');
-    executeGitCommand(`git commit ${noVerifyFlag} -m "${message}"`);
+    executeGitCommand(`git commit ${noVerifyFlag} -m "${escapedMessage}"`);
   });
 
 // Parse arguments
