@@ -72,8 +72,8 @@ program
         const decodedMessage = decodeMessage(stashDescription);
         // Escape double quotes for shell command
         const escapedMessage = decodedMessage.replace(/"/g, '\\"');
-        // Add -n flag if --no-verify is specified
-        const noVerifyFlag = options.noVerify ? '-n' : '';
+        // Add -n flag if --no-verify is specified (commander generates options.verify)
+        const noVerifyFlag = options.verify === false ? '-n' : '';
 
         console.log();
         console.log(`Popping stash item: stash@{0}`);
@@ -94,8 +94,8 @@ program
       const decodedMessage = decodeMessage(latestStashDescription);
       // Escape double quotes for shell command
       const escapedMessage = decodedMessage.replace(/"/g, '\\"');
-      // Add -n flag if --no-verify is specified
-      const noVerifyFlag = options.noVerify ? '-n' : '';
+      // Add -n flag if --no-verify is specified (commander generates options.verify)
+      const noVerifyFlag = options.verify === false ? '-n' : '';
 
       executeGitCommand('git stash pop');
 
