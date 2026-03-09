@@ -32,6 +32,13 @@ pnpm test
 
 # Run single test file
 pnpm test -- gac.test.cjs
+
+# Check if commands are registered and detect conflicts
+pnpm check
+
+# Options
+pnpm check -- -q    # Quiet mode (summary only)
+pnpm check -- -c    # Conflicts only
 ```
 
 ## Architecture
