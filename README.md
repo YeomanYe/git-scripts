@@ -2,12 +2,16 @@
 
 这个项目包含一些Git快捷脚本，用于简化日常开发中的Git操作。
 
+> **运行环境**：脚本依赖 POSIX shell（部分命令如 `grh` 会生成 `#!/bin/bash` 临时脚本驱动非交互式 rebase）。在 macOS / Linux 下可直接使用；在 **Windows 下请在 Git Bash 或 WSL 中运行**，原生 cmd / PowerShell 不受支持。
+
+> **关于 `git add .`**：`gac`、`gph`、`gpf` 在提交前会执行 **`git add .`**，即把工作区**全部**改动（含新增、修改、删除的已跟踪与未跟踪文件）一次性暂存。这是「一条命令搞定」的设计取舍——使用前请确认工作区只包含你想提交的内容，避免误提交。
+
 ## 目录结构
 
 ```
 ├── src/              # 存放所有Git快捷脚本
 ├── package.json      # 项目配置文件
-├── __test__          # 测试文件目录
+├── __tests__         # 测试文件目录
 └── README.md         # 项目说明文档
 ```
 
@@ -16,6 +20,8 @@
 ### gac - Git Add and Commit
 
 **功能**：执行 `git add . && git commit -m "xxx"` 命令，一键添加所有修改并提交。
+
+> ⚠️ 会 `git add .`，暂存工作区**全部**改动后再提交。
 
 **使用方法**：
 ```bash
@@ -75,6 +81,8 @@ gme -e feature-branch
 ### gpf - Git Push Force
 
 **功能**：执行 `git add . && git commit -m "xxx" && git push -f` 命令，一键添加所有修改、提交并强制推送到远程仓库。
+
+> ⚠️ 会 `git add .`，暂存工作区**全部**改动；并使用 `git push -f` 强制推送，会覆盖远端历史，请谨慎使用。
 
 **使用方法**：
 ```bash
@@ -227,6 +235,8 @@ gcw -a
 ### gph - Git Push
 
 **功能**：执行 `git add . && git commit -m "xxx" && git push` 命令，一键添加所有修改、提交并推送到远程仓库。
+
+> ⚠️ 会 `git add .`，暂存工作区**全部**改动后再提交并推送。
 
 **使用方法**：
 ```bash

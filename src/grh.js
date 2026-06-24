@@ -5,28 +5,7 @@ const { Command } = require('commander');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-
-// Helper function to execute git commands
-function executeGitCommand(command) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
-    return output;
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(`Error details: ${error.message}`);
-    process.exit(1);
-  }
-}
-
-// Helper function to execute git commands that might fail
-function tryExecuteGitCommand(command) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
-    return output.trim();
-  } catch (error) {
-    return null;
-  }
-}
+const { executeGitCommand, tryExecuteGitCommand, escapeQuotes, firstLine } = require('./lib/git');
 
 // Get the latest commit message
 function getLatestCommitMessage() {
@@ -113,7 +92,9 @@ function getRemoteBaseCommit() {
 // Execute squash rebase using interactive rebase
 function executeSquashRebase(targetRef, squashCount, commitMessage) {
   const tempDir = os.tmpdir();
-  const tempFile = path.join(tempDir, `git-rebase-todo-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const tempFile = path.join(tempDir, `git-rebase-todo-${uniqueSuffix}`);
+  const editorScript = path.join(tempDir, `git-editor-${uniqueSuffix}.sh`);
 
   try {
     // Get the commits to squash (from target to HEAD, exclusive of target)
@@ -143,7 +124,6 @@ function executeSquashRebase(targetRef, squashCount, commitMessage) {
     console.log(`Squashing ${squashCount} commits...`);
 
     // Execute interactive rebase with custom editor that uses our todo file
-    const editorScript = path.join(tempDir, `git-editor-${Date.now()}.sh`);
     const editorContent = `#!/bin/bash
 cat "${tempFile}" > "$1"
 `;
@@ -160,7 +140,7 @@ cat "${tempFile}" > "$1"
     });
 
     // Amend the commit with the desired message
-    execSync(`git commit --amend -m "${commitMessage.replace(/"/g, '\\"')}"`, { stdio: 'inherit' });
+    execSync(`git commit --amend -m "${escapeQuotes(commitMessage)}"`, { stdio: 'inherit' });
     console.log(`Updated commit message to: "${commitMessage}"`);
 
     console.log('Squash completed successfully!');
@@ -172,7 +152,6 @@ cat "${tempFile}" > "$1"
     if (fs.existsSync(tempFile)) {
       fs.unlinkSync(tempFile);
     }
-    const editorScript = path.join(tempDir, `git-editor-${Date.now()}.sh`);
     if (fs.existsSync(editorScript)) {
       fs.unlinkSync(editorScript);
     }
@@ -214,7 +193,7 @@ If no remote branch is found, rebases onto the first commit.`)
       targetDescription = `remote ${remoteBase.branch}`;
     } else {
       // Fall back to first commit
-      targetRef = executeGitCommand(`git log --reverse --pretty=format:"%H" | head -1`).trim();
+      targetRef = firstLine(executeGitCommand('git log --reverse --pretty=format:"%H"'));
       targetDescription = 'first commit';
     }
 

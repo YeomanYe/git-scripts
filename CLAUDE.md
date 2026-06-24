@@ -44,6 +44,7 @@ pnpm check -- -c    # Conflicts only
 ## Architecture
 
 - Each CLI command is a separate file in `src/` using **Commander.js** for argument parsing
-- Tests are in `__test__/` with matching `.test.cjs` filenames
+- Tests are in `__tests__/` with matching `.test.cjs` filenames
+- Shared helpers (git command runners, quote escape/unescape, stash message encode/decode) live in `src/lib/git.js` and are unit-tested in `__tests__/lib-git.test.cjs`
 - Special encoding/decoding logic in gcs/gsc for preserving special characters across stash operations
 - Quote escaping logic in gac for handling quotes in commit messages

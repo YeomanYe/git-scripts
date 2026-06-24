@@ -2,22 +2,11 @@
 
 const { execSync } = require('child_process');
 const { Command } = require('commander');
-
-// Helper function to execute git commands
-function executeGitCommand(command) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
-    return output;
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(`Error details: ${error.message}`);
-    process.exit(1);
-  }
-}
+const { executeGitCommand, escapeQuotes, lastLine } = require('./lib/git');
 
 // Get the Nth commit message from HEAD
 function getNthCommitMessage(n) {
-  const commitHash = executeGitCommand(`git log -${n} --pretty=format:"%H" | tail -1`).trim();
+  const commitHash = lastLine(executeGitCommand(`git log -${n} --pretty=format:"%H"`));
   return executeGitCommand(`git log -1 --pretty=%B ${commitHash}`).trim();
 }
 
@@ -31,7 +20,7 @@ function executeNonInteractiveRebase(targetRef, squashCount, commitMessage) {
   console.log(`Squashing ${squashCount} commits...`);
 
   // Get the base commit (the commit before the ones we're squashing)
-  const baseCommit = executeGitCommand(`git log -${squashCount + 1} --pretty=format:"%H" | tail -1`).trim();
+  const baseCommit = lastLine(executeGitCommand(`git log -${squashCount + 1} --pretty=format:"%H"`));
 
   // Soft reset to the base commit (keeps all changes staged)
   execSync(`git reset --soft ${baseCommit}`, { stdio: 'inherit' });
@@ -44,7 +33,7 @@ function executeNonInteractiveRebase(targetRef, squashCount, commitMessage) {
   }
 
   // Create a new commit with the desired message
-  execSync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`, { stdio: 'inherit' });
+  execSync(`git commit -m "${escapeQuotes(commitMessage)}"`, { stdio: 'inherit' });
   console.log(`Created new commit with message: "${commitMessage}"`);
 
   console.log('Squash completed successfully!');

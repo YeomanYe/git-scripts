@@ -1,34 +1,7 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
 const { Command } = require('commander');
-
-// Helper function to execute git commands
-function executeGitCommand(command) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
-    return output;
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(`Error details: ${error.message}`);
-    process.exit(1);
-  }
-}
-
-// Decode markers back to special characters
-// - First unescape existing markers: ::::X:::: → ::X::
-// - Then decode: ::NL:: → \n, ::CR:: → \r, ::TAB:: → \t, ::DQ:: → "
-function decodeMessage(message) {
-  let decoded = message;
-  // First unescape escaped markers
-  decoded = decoded.replace(/::::([A-Z]+)::::/g, '::$1::');
-  // Then decode special characters
-  decoded = decoded.replace(/::NL::/g, '\n');
-  decoded = decoded.replace(/::CR::/g, '\r');
-  decoded = decoded.replace(/::TAB::/g, '\t');
-  decoded = decoded.replace(/::DQ::/g, '"');
-  return decoded;
-}
+const { executeGitCommand, decodeMessage, escapeQuotes } = require('./lib/git');
 
 // Create commander instance
 const program = new Command();
@@ -71,7 +44,7 @@ program
         const stashDescription = firstStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
         const decodedMessage = decodeMessage(stashDescription);
         // Escape double quotes for shell command
-        const escapedMessage = decodedMessage.replace(/"/g, '\\"');
+        const escapedMessage = escapeQuotes(decodedMessage);
         // Add -n flag if --no-verify is specified (commander generates options.verify)
         const noVerifyFlag = options.verify === false ? '-n' : '';
 
@@ -93,7 +66,7 @@ program
       const latestStashDescription = latestStashInfo.split(':').slice(2).join(':').trim().replace(/^On [^:]*: /, '');
       const decodedMessage = decodeMessage(latestStashDescription);
       // Escape double quotes for shell command
-      const escapedMessage = decodedMessage.replace(/"/g, '\\"');
+      const escapedMessage = escapeQuotes(decodedMessage);
       // Add -n flag if --no-verify is specified (commander generates options.verify)
       const noVerifyFlag = options.verify === false ? '-n' : '';
 

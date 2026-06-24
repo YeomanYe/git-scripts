@@ -1,19 +1,7 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
 const { Command } = require('commander');
-
-// Helper function to execute git commands
-function executeGitCommand(command, options = {}) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8', ...options });
-    return output;
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(`Error details: ${error.message}`);
-    process.exit(1);
-  }
-}
+const { executeGitCommand } = require('./lib/git');
 
 // Create commander instance
 const program = new Command();

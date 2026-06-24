@@ -1,33 +1,7 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
 const { Command } = require('commander');
-
-// Helper function to execute git commands
-function executeGitCommand(command, options = {}) {
-  try {
-    const output = execSync(command, { stdio: 'pipe', encoding: 'utf8', ...options });
-    return output;
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(`Error details: ${error.message}`);
-    process.exit(1);
-  }
-}
-
-// Encode special characters to markers for stash message
-// - Escape existing markers first: ::X:: → ::::X::::
-// - Then encode: \n → ::NL::, \r → ::CR::, \t → ::TAB::, " → ::DQ::
-function encodeMessage(message) {
-  // First escape any existing markers to prevent conflicts
-  let encoded = message.replace(/::([A-Z]+)::/g, '::::$1::::');
-  // Then encode special characters
-  encoded = encoded.replace(/\n/g, '::NL::');
-  encoded = encoded.replace(/\r/g, '::CR::');
-  encoded = encoded.replace(/\t/g, '::TAB::');
-  encoded = encoded.replace(/"/g, '::DQ::');
-  return encoded;
-}
+const { executeGitCommand, encodeMessage } = require('./lib/git');
 
 // Create commander instance
 const program = new Command();

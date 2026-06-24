@@ -1,7 +1,7 @@
 {
   "name": "git-scripts",
   "version": "1.0.0",
-  "description": "A collection of git utility scripts compatible with Windows",
+  "description": "A collection of git utility CLI shortcuts (run under a POSIX shell: macOS/Linux, or Git Bash/WSL on Windows)",
 
 
   "scripts": {
