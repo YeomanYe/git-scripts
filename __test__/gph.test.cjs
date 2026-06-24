@@ -23,7 +23,7 @@ describe('gph', () => {
     tmpDir = await tmp.dir({ unsafeCleanup: true });
     
     // Initialize a git repository
-    executeGitCommand(tmpDir.path, 'git init');
+    executeGitCommand(tmpDir.path, 'git init -b master');
     executeGitCommand(tmpDir.path, 'git config user.email "test@example.com"');
     executeGitCommand(tmpDir.path, 'git config user.name "Test User"');
   });
@@ -42,9 +42,34 @@ describe('gph', () => {
   it('should show help message when using -h option', () => {
     // Execute gph with -h option
     const output = executeScript(tmpDir.path, 'gph -h');
-    
+
     // Verify help message is displayed
     expect(output).toContain('Usage: gph');
     expect(output).toContain('Quickly add all changes, commit with the provided message, and push');
+  });
+
+  it('should preserve double quotes in commit message (no shell injection)', () => {
+    // Regression: gph used a raw "${message}" which broke on quotes / allowed injection.
+    // Set up a bare remote so the full add+commit+push path runs.
+    const bareRepo = `${tmpDir.path}/bare-repo`;
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
+    // Initial commit + upstream so `git push` (no args) has a tracking branch
+    fs.writeFileSync(path.join(tmpDir.path, 'initial.txt'), 'initial');
+    executeGitCommand(tmpDir.path, 'git add .');
+    executeGitCommand(tmpDir.path, 'git commit -m "initial commit"');
+    executeGitCommand(tmpDir.path, 'git push -u origin master');
+
+    // New change committed via gph with a double quote in the message
+    fs.writeFileSync(path.join(tmpDir.path, 'new.txt'), 'new');
+    const scriptPath = path.join(__dirname, '../src/gph.js');
+    execSync(`node ${scriptPath} 'feat: add "quoted" feature'`, {
+      cwd: tmpDir.path,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+
+    const log = executeGitCommand(tmpDir.path, 'git log -1 --pretty=%s');
+    expect(log.trim()).toBe('feat: add "quoted" feature');
   });
 });

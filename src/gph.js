@@ -15,6 +15,16 @@ function executeGitCommand(command) {
   }
 }
 
+// Unescape quotes from command line input: \" → ", \' → '
+function unescapeQuotes(message) {
+  return message.replace(/\\"/g, '"').replace(/\\'/g, "'");
+}
+
+// Escape quotes for shell command: " → \"
+function escapeQuotes(message) {
+  return message.replace(/"/g, '\\"');
+}
+
 // Create commander instance
 const program = new Command();
 
@@ -27,8 +37,10 @@ program
   .argument('<commit-message>', 'Commit message for the git commit')
   .addHelpText('after', `\nExamples:\n  $ gph "feat: add new feature"\n  $ gph "fix: resolve bug"`)
   .action((message) => {
+    // Unescape input (\" → "), then escape for shell (" → \")
+    const escapedMessage = escapeQuotes(unescapeQuotes(message));
     executeGitCommand('git add .');
-    executeGitCommand(`git commit -m "${message}"`);
+    executeGitCommand(`git commit -m "${escapedMessage}"`);
     executeGitCommand('git push');
   });
 

@@ -23,7 +23,7 @@ describe('gcs', () => {
     tmpDir = await tmp.dir({ unsafeCleanup: true });
     
     // Initialize a git repository
-    executeGitCommand(tmpDir.path, 'git init');
+    executeGitCommand(tmpDir.path, 'git init -b master');
     executeGitCommand(tmpDir.path, 'git config user.email "test@example.com"');
     executeGitCommand(tmpDir.path, 'git config user.name "Test User"');
   });
@@ -42,7 +42,7 @@ describe('gcs', () => {
     
     // Create a unique bare repo as remote for each test
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
     
@@ -78,7 +78,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote for each test
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 
@@ -115,7 +115,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 
@@ -142,7 +142,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 
@@ -169,7 +169,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 
@@ -196,7 +196,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 
@@ -224,7 +224,7 @@ describe('gcs', () => {
 
     // Create a unique bare repo as remote
     const bareRepo = `${tmpDir.path}/bare-repo`;
-    executeGitCommand(tmpDir.path, `git init --bare ${bareRepo}`);
+    executeGitCommand(tmpDir.path, `git init --bare -b master ${bareRepo}`);
     executeGitCommand(tmpDir.path, `git remote add origin ${bareRepo}`);
     executeGitCommand(tmpDir.path, 'git push -u origin master');
 

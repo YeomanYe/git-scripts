@@ -23,7 +23,7 @@ describe('gme', () => {
     tmpDir = await tmp.dir({ unsafeCleanup: true });
 
     // Initialize a git repository
-    executeGitCommand(tmpDir.path, 'git init');
+    executeGitCommand(tmpDir.path, 'git init -b master');
     executeGitCommand(tmpDir.path, 'git config user.email "test@example.com"');
     executeGitCommand(tmpDir.path, 'git config user.name "Test User"');
 
