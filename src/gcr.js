@@ -26,8 +26,16 @@ program
   .usage('')
   .addHelpText('after', `\nExamples:\n  $ gcr`)
   .action(() => {
-    executeGitCommand('git stash -u');
-    executeGitCommand('git stash drop stash@{0}');
+    // `git stash -u` only creates a new stash entry when there are local
+    // changes. If the working tree is clean it prints "No local changes to
+    // save" and creates nothing — dropping stash@{0} afterwards would then
+    // delete the user's pre-existing top stash. Only drop when this run
+    // actually created a new stash.
+    const stashOutput = executeGitCommand('git stash -u');
+    const createdStash = !/No local changes to save/.test(stashOutput);
+    if (createdStash) {
+      executeGitCommand('git stash drop stash@{0}');
+    }
     console.log('Git repository cleaned!');
   });
 
