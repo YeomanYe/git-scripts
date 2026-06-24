@@ -37,8 +37,8 @@ pnpm test -- gac.test.cjs
 pnpm check
 
 # Options
-pnpm check -- -q    # Quiet mode (summary only)
-pnpm check -- -c    # Conflicts only
+pnpm check -q    # Quiet mode (summary only)
+pnpm check -c    # Conflicts only
 ```
 
 ## Architecture
